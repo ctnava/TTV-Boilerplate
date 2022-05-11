@@ -11,6 +11,9 @@ import App from "./App/App";
 
 function TTV(props) {
     var twitch = window.Twitch ? window.Twitch.ext : null;
+    if (twitch) twitch.rig.log("TTV Detected");
+    else console.log("TTV not Detected");
+
     const [loading, setLoading] = useState(true);
     const [auth, setAuth] = useState(oauth.defaultState);
     const [theme, setTheme] = useState('light');
