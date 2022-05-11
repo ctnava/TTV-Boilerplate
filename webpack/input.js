@@ -1,3 +1,8 @@
+const webpack = require("webpack");
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+
 const entryPoints = [
   {
     name:"VideoComponent",
@@ -34,9 +39,6 @@ const entryPoints = [
 
 
 const configAddons = (mode) => {
-  const webpack = require("webpack");
-  const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-
   var entry = {};
   var plugins = [
     new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['dist']}),
@@ -44,7 +46,6 @@ const configAddons = (mode) => {
   ];
 
 
-  const HtmlWebpackPlugin = require("html-webpack-plugin");
   for (const point in entryPoints) {
     if (point.build) {
       entry.name = `./src/${point.name}.js`;

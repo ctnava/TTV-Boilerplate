@@ -5,10 +5,11 @@
   "scripts": {
     "test": "jest",
     "build": "webpack --mode=production",
-    "start": "webpack --mode=development",
-    "host": "webpack --mode=devrig",
+    "start": "webpack-dev-server --mode=development",
+    "host": "webpack-dev-server --mode=development --devrig",
     "watch": "webpack --watch",
-    "serve": "webpack serve"
+    "serve": "webpack serve --mode",
+    "help": "webpack --help"
   },
   "author": "ctnava.github.io",
   "license": "MIT",
