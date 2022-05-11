@@ -34,12 +34,17 @@ const entryPoints = [
 
 
 const configAddons = (mode) => {
+  const webpack = require("webpack");
+  const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
   var entry = {};
   var plugins = [
-    new require('clean-webpack-plugin')(['dist']),
-    new require("webpack").HotModuleReplacementPlugin()
+    new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['dist']}),
+    new webpack.HotModuleReplacementPlugin()
   ];
 
+
+  const HtmlWebpackPlugin = require("html-webpack-plugin");
   for (const point in entryPoints) {
     if (point.build) {
       entry.name = `./src/${point.name}.js`;
@@ -50,7 +55,7 @@ const configAddons = (mode) => {
           template:'./webpack/template.html',
           filename: point.outputHtml
         };
-        plugins.push(new require('html-webpack-plugin')(options));
+        plugins.push(new HtmlWebpackPlugin(options));
       }
     }
   }

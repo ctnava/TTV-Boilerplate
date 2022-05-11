@@ -1,6 +1,7 @@
-const mode = argv.mode;
-const { entry, plugins } = require("./webpack/input")(mode);
-
+const path = require("path");
+const mode = process.argv.mode;
+const configAddons = require("./webpack/input");
+const { entry, plugins } = configAddons(mode);
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { optimization, ruleSet, resolve } = require("./webpack/settings");
 const rules = (mode === "production") ? ruleSet(MiniCssExtractPlugin.loader) : ruleSet("style-loader");
@@ -15,7 +16,7 @@ var config = {
 
   output: { 
     filename: "[name].bundle.js",
-    path: require("path").resolve(__dirname, "dist") 
+    path: path.resolve(__dirname, "dist") 
   }
 };
 
@@ -23,7 +24,8 @@ var config = {
 module.exports = () => {
   if (mode === "production") {
     config.plugins.push(new MiniCssExtractPlugin());
-    config.plugins.push(new require("workbox-webpack-plugin").GenerateSW());
+    const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
+    config.plugins.push(new WorkboxWebpackPlugin.GenerateSW());
     config.optimization.splitChunks={
       cacheGroups:{
         default:false,

@@ -4,12 +4,9 @@
   "description": "My webpack project",
   "scripts": {
     "test": "jest",
-    "start": "react-scripts start",
-    "build": "webpack --mode=production --node-env=production",
-    "eject": "react-scripts eject",
-    "http": "npx http-server",
-    "build:dev": "webpack --mode=development",
-    "build:prod": "webpack --mode=production --node-env=production",
+    "build": "webpack --mode=production",
+    "start": "webpack --mode=development",
+    "host": "webpack --mode=devrig",
     "watch": "webpack --watch",
     "serve": "webpack serve"
   },
@@ -48,7 +45,6 @@
     "react-dom": "^18.1.0",
     "react-dotenv": "^0.1.3",
     "react-router-dom": "^6.3.0",
-    "react-scripts": "^5.0.1",
     "react-select": "^5.3.2",
     "react-tooltip": "^4.2.21",
     "toastr": "^2.1.4"
