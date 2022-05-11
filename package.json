@@ -4,11 +4,9 @@
   "description": "My TTV Extension Boilerplate",
   "scripts": {
     "test": "jest",
-
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-
     "http": "npx http-server"
   },
   "author": "ctnava.github.io",
@@ -18,8 +16,10 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^13.5.0",
+    "jest": "^28.1.0",
     "react-test-renderer": "^18.1.0",
-    "sinon": "^14.0.0"
+    "sinon": "^14.0.0",
+    "webpack": "^5.72.1"
   },
   "dependencies": {
     "axios": "^0.27.2",
