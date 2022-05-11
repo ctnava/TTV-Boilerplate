@@ -14,7 +14,7 @@ function setToken(tkn, id, setAuth) {
     let user_id = "";
 
     try {
-        let decoded = require('jsonwebtoken').decode(token)
+        let decoded = require('jose').decode(token)
         isMod = (decoded.role === 'broadcaster' || decoded.role === 'moderator');
         user_id = decoded.user_id;
         role = decoded.role;

@@ -47,8 +47,7 @@ function TTV(props) {
         }, [loading]);
     }
 
-
-    twitch.log(`Returning ${props.type}`);
+    if (twitch) twitch.log(`Returning ${props.type}`);
     switch (props.type) {
         case "Config":
             return(<Config 
