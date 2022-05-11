@@ -7,7 +7,7 @@ import Config from './Config/Config';
 import App from "./App/App";
 
 
-function TTV(props) {
+function TTV(props) { diag(twitch, props.type);
     // Basic States
     const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ function TTV(props) {
     const [theme, setTheme] = useState('light');
     const themeClass = (theme === 'light') ? ('Ext-light') : ('Ext-dark');
     const [visible, setVisible] = useState(true);
-    useEffect(() => { diag(twitch, props.type);
+    useEffect(() => { 
         if (twitch) {
             twitch.onAuthorized((credentials)=>{
                 oauth.setToken(credentials.token, credentials.userId, setAuth);
