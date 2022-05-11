@@ -1,25 +1,41 @@
 {
-  "name": "ttv-extension-boilerplate",
+  "name": "my-webpack-project",
   "version": "1.0.0",
-  "description": "My TTV Extension Boilerplate",
+  "description": "My webpack project",
   "scripts": {
     "test": "jest",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "webpack --mode=production --node-env=production",
     "eject": "react-scripts eject",
-    "http": "npx http-server"
+    "http": "npx http-server",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch",
+    "serve": "webpack serve"
   },
   "author": "ctnava.github.io",
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^13.5.0",
+    "@webpack-cli/generators": "^2.4.2",
+    "babel-loader": "^8.2.5",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
     "jest": "^28.1.0",
+    "mini-css-extract-plugin": "^2.6.0",
     "react-test-renderer": "^18.1.0",
     "sinon": "^14.0.0",
-    "webpack": "^5.72.1"
+    "style-loader": "^3.3.1",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0",
+    "workbox-webpack-plugin": "^6.5.3"
   },
   "dependencies": {
     "axios": "^0.27.2",
