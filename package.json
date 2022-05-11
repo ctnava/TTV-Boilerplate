@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "My TTV Extension Boilerplate",
   "scripts": {
+    "test": "jest",
+
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+
+    "http": "npx http-server"
   },
   "author": "ctnava.github.io",
   "license": "MIT",
@@ -49,5 +52,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.js?$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "\\.(scss|jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/mocks/file.js",
+      "\\.(css|sccss|less)$": "<rootDir>/mocks/style.js"
+    }
   }
 }
