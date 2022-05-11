@@ -4,6 +4,7 @@ import ttv from './utils';
 import './resources/styles.css';
 
 
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Config from './Config/Config';
 import App from "./App/App";
 
@@ -30,60 +31,68 @@ function TTV(props) {
     }, [loading]);
 
 
-    if (twitch) twitch.log(`Returning ${props.type}`);
-    else console.log(`Returning ${props.type}`);
-    switch (props.type) {
-        case "Config":
-            return(<Config 
+    return(<BrowserRouter><Routes>
+        <Route 
+        path="/config" 
+        element={
+            <Config 
                 type="static"
                 themeClass={themeClass}
                 loading={loading}
                 auth={auth}
-            />);
-
-        case "LiveConfig":
-            return(<Config 
+            />} 
+        />
+        <Route 
+        path="/live_config" 
+        element={
+            <Config 
                 type="live"
                 themeClass={themeClass}
                 loading={loading}
                 auth={auth}
-            />);
-
-        case "Mobile":
-            return(<App 
+            />} 
+        />
+        <Route 
+        path="/mobile" 
+        element={
+            <App 
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />);
-
-        case "Panel":
-            return(<App 
+            />} 
+        />
+        <Route 
+        path="/panel" 
+        element={
+            <App 
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />);
-
-        case "VideoComponent":
-            return(<App 
+            />} 
+        />
+        <Route 
+        path="/video_component" 
+        element={
+            <App 
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />);
-
-        case "VideoOverlay":
-            return(<App 
+            />} 
+        />
+        <Route 
+        path="/video_overlay" 
+        element={
+            <App 
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />);
-
-        default:
-            return(<div>INVALID EXTENSION TYPE</div>);
-    }
+            />} 
+        />
+    </Routes></BrowserRouter>);
 }
 
 

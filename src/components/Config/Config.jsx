@@ -5,6 +5,7 @@ import OAuth from '../OAuth/OAuth';
 
 
 function Config(props) {
+    const loaded = props.type === "live" ? !props.loading : (!props.loading && props.auth.isMod)
     return(<div className={`Ext ${props.themeClass}`}>
         
         { loaded ? (<div>
