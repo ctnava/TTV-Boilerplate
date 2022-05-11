@@ -14,40 +14,24 @@ function TTV(props) {
     const [auth, setAuth] = useState(oauth.defaultState);
     const [theme, setTheme] = useState('light');
     const themeClass = (theme === 'light') ? ('Ext-light') : ('Ext-dark');
-    
-    // ONLY APP
     const [visible, setVisible] = useState(true);
-    if (props.type === "Config") {
-        useEffect(() => {
-            if (twitch) {
-                ttv.authorize(twitch, setAuth, loading, setLoading);
-                ttv.updateContext(twitch, setTheme);
-            }
-        }, [loading]);
 
-    } else if (props.type === "LiveConfig") {
-        useEffect(() => {
-            if (twitch) {
-                ttv.authorize(twitch, setAuth, loading, setLoading);
-                ttv.updateContext(twitch, setTheme);
+
+    useEffect(() => {
+        if (twitch) {
+            ttv.authorize(twitch, setAuth, loading, setLoading);
+            ttv.updateContext(twitch, setTheme);
+            if (props.type !== "Config") {
+                if (props.type !== "LiveConfig") ttv.updateVisibility(twitch, setVisible);
                 ttv.listen(twitch);
                 return ttv.unmount(twitch);
             }
-        }, [loading]);
+        }
+    }, [loading]);
 
-    } else {
-        useEffect(() => {
-            if (twitch){
-                ttv.authorize(twitch, setAuth, loading, setLoading);
-                ttv.updateContext(twitch, setTheme);
-                ttv.updateVisibility(twitch, setVisible);
-                ttv.listen(twitch);
-                return ttv.unmount(twitch);
-            }
-        }, [loading]);
-    }
 
     if (twitch) twitch.log(`Returning ${props.type}`);
+    else console.log(`Returning ${props.type}`);
     switch (props.type) {
         case "Config":
             return(<Config 
