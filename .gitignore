@@ -16,11 +16,8 @@
 /.pnp.js
 
 
-# contracts
-/data/31337
-/data/1337
-
-
 # react
 /build 
-Bandit3.json
+
+# Twitch
+Project.json
