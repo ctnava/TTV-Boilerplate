@@ -30,7 +30,7 @@ const sharedId = (auth) => {return !!auth.user_id};
 
 // checks to ensure there is a valid token in the state
 const authenticated = (auth) => {
-    const {defined} = require("../resources/common");
+    const { defined } = require("../resources/utils");
     return (defined(auth.token) && defined(auth.opaque_id));
 }; 
 

@@ -11,4 +11,4 @@ const requestHeader = (auth) => {
 }
 
 
-module.exports = requestHeader;
+module.exports = { requestHeader };
