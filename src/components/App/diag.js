@@ -1,4 +1,4 @@
-const diag = (twitch, loading, visible) => {
+const diag = (twitch, type, loading, visible) => {
     if (twitch) { 
         twitch.rig.log(`Loading ${type}...`);
         if (!loading && visible) twitch.rig.log(`Loaded! Displaying ${type}`);

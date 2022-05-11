@@ -64,6 +64,7 @@ function TTV(props) { diag(twitch, props.type);
 
         case "Mobile":
             return(<App 
+                type={props.type}
                 twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
@@ -73,6 +74,7 @@ function TTV(props) { diag(twitch, props.type);
 
         case "Panel":
             return(<App 
+                type={props.type}
                 twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
@@ -82,6 +84,7 @@ function TTV(props) { diag(twitch, props.type);
 
         case "VideoComponent":
             return(<App 
+                type={props.type}
                 twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
@@ -91,6 +94,7 @@ function TTV(props) { diag(twitch, props.type);
 
         case "VideoOverlay":
             return(<App 
+                type={props.type}
                 twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
