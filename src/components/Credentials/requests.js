@@ -1,11 +1,11 @@
 const oauth = require("./oauth.js");
 
 
-const basic = {'Content-Type':'application/json'};
+const defaultState = {'Content-Type':'application/json'};
 
 
 function authorize(auth) {
-    var header = defaultHeader;
+    var header = defaultState;
     if (oauth.eval.authenticated(auth)) {
         header['Authorization'] = `Bearer ${auth.token}`;
         return header;
@@ -13,4 +13,4 @@ function authorize(auth) {
 }
 
 
-module.exports = { basic, authorize };
+module.exports = { defaultState, authorize };
