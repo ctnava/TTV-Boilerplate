@@ -6,6 +6,7 @@ const defaultState = {
     role: undefined
 };
 
+
 function setToken(tkn, id, setAuth) {
     let token = tkn;
     let opaque_id = id;
@@ -23,16 +24,17 @@ function setToken(tkn, id, setAuth) {
     setAuth({token, opaque_id, user_id, isMod, role});
 }
 
-const loggedIn = (auth) => {return auth.opaque_id[0] === 'U'};
 
-// similar to mod status, this isn't always verifiable, so have your backend verify before proceeding. 
-const sharedId = (auth) => {return !!auth.user_id};
-
-// checks to ensure there is a valid token in the state
-const authenticated = (auth) => {
-    const { defined } = require("../resources/utils");
-    return (defined(auth.token) && defined(auth.opaque_id));
-}; 
+const isDefined = (pointer) => {
+    return (
+        (pointer !== undefined) && 
+        (pointer !== null) && 
+        (pointer !== false)
+    );
+};
+const loggedIn      = (auth) => {return (auth.opaque_id[0] === 'U' && isDefined(auth.opaque_id))};
+const sharedId      = (auth) => {return !!auth.user_id}; // NOT SAFE! Backend Verification Required.
+const authenticated = (auth) => {return (isDefined(auth.token) && isDefined(auth.opaque_id))}; 
 
 
 module.exports = { 

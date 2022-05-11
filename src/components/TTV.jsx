@@ -1,101 +1,106 @@
+import diag from './diag';
+import oauth from './Credentials/oauth';
+
+import './styles.css';
 import React, { useState, useEffect } from 'react';
-import oauth from './OAuth/utils';
-import ttv from './utils';
-import './resources/styles.css';
-
-
-import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Config from './Config/Config';
 import App from "./App/App";
 
 
 function TTV(props) {
-    var twitch = window.Twitch ? window.Twitch.ext : null;
-    if (twitch) twitch.rig.log("TTV Detected");
-    else console.log("TTV not Detected");
-
+    // Basic States
     const [loading, setLoading] = useState(true);
+
+    // TTV Extension, States, & Setup Effects
+    var twitch = window.Twitch ? window.Twitch.ext : false;
     const [auth, setAuth] = useState(oauth.defaultState);
     const [theme, setTheme] = useState('light');
     const themeClass = (theme === 'light') ? ('Ext-light') : ('Ext-dark');
     const [visible, setVisible] = useState(true);
-
-
-    useEffect(() => {
+    useEffect(() => { diag(twitch, props.type);
         if (twitch) {
-            ttv.authorize(twitch, setAuth, loading, setLoading);
-            ttv.updateContext(twitch, setTheme);
+            twitch.onAuthorized((credentials)=>{
+                oauth.setToken(credentials.token, credentials.userId, setAuth);
+                if(loading){
+                    // additionalSetup();
+                    setLoading(false);
+                }
+            });
+        
+            twitch.onContext((context, delta) => { if(delta.includes('theme')) setTheme(context.theme)});
+
             if (props.type !== "Config") {
-                if (props.type !== "LiveConfig") ttv.updateVisibility(twitch, setVisible);
-                ttv.listen(twitch);
-                return ttv.unmount(twitch);
+                if (props.type !== "LiveConfig") twitch.onVisibilityChanged((visibility, _c) => {setVisible(visibility)});
+
+                twitch.listen('broadcast', (target, contentType, body)=>{
+                    twitch.rig.log(`New PubSub message!\n${target}\n${contentType}\n${body}`);
+                    // otherActions(target, contentType, body);
+                });
+
+                return twitch.unlisten('broadcast', () => {console.log('successfully unlistened')});
             }
         }
     }, [loading]);
 
 
-    return(<BrowserRouter><Routes>
-        <Route 
-        path="/config" 
-        element={
-            <Config 
-                type="static"
+    switch (props.type) {
+        case "Config":
+            return(<Config 
+                type="Static"
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 auth={auth}
-            />} 
-        />
-        <Route 
-        path="/live_config" 
-        element={
-            <Config 
-                type="live"
+            />);
+
+        case "LiveConfig":
+            return(<Config 
+                type="Live"
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 auth={auth}
-            />} 
-        />
-        <Route 
-        path="/mobile" 
-        element={
-            <App 
+            />);
+
+        case "Mobile":
+            return(<App 
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />} 
-        />
-        <Route 
-        path="/panel" 
-        element={
-            <App 
+            />);
+
+        case "Panel":
+            return(<App 
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />} 
-        />
-        <Route 
-        path="/video_component" 
-        element={
-            <App 
+            />);
+
+        case "VideoComponent":
+            return(<App 
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />} 
-        />
-        <Route 
-        path="/video_overlay" 
-        element={
-            <App 
+            />);
+
+        case "VideoOverlay":
+            return(<App 
+                twitch={twitch}
                 themeClass={themeClass}
                 loading={loading}
                 visible={visible}
                 auth={auth}
-            />} 
-        />
-    </Routes></BrowserRouter>);
+            />);
+
+        default:
+            return(<div>INVALID EXTENSION TYPE</div>);
+    }
 }
 
 

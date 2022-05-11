@@ -1,5 +1,5 @@
 import React from 'react';
-import oauth from './utils';
+import oauth from './oauth';
 
 
 function OAuth(props) {

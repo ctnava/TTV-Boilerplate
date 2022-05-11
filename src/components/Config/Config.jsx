@@ -1,27 +1,28 @@
+import diag from './diag';
+
 import React from 'react';
+import OAuth from '../Credentials/OAuthDisplay';
 
 
-import OAuth from '../OAuth/OAuth';
-
-
-function Config(props) {
-    const loaded = props.type === "live" ? !props.loading : (!props.loading && props.auth.isMod)
+function Config(props) { diag(props.twitch, props.type, props.loading, props.auth);
+    
+    
     return(<div className={`Ext ${props.themeClass}`}>
-        
-        { loaded ? (<div>
+        <h1>Config - {props.type}</h1><hr/>
 
-            <h1>Config Component - {props.type}</h1>
-            
-            <hr/>
+        { !props.loading ? (
 
-            {props.type === "live" ? (
+            props.type === "Live" ? (
 
-                <OAuth auth={props.auth} />
+                props.auth.isMod ? (
+                    
+                    <OAuth auth={props.auth} />
+                
+                ) : (<p>User not Moderator</p>)
 
-            ) : (<p>Configuration Not Required</p>)}
+            ) : (<p>Configuration Not Required</p>)
 
-        </div>) : "Loading..."}
-
+        ) : (<p>Loading...</p>) }
     </div>);
 }
 

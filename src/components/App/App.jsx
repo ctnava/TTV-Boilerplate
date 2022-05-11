@@ -1,17 +1,16 @@
+import diag from './diag';
+
 import React from 'react';
+import OAuth from '../Credentials/OAuthDisplay';
 
 
-function App(props) {
+function App(props) { diag(props.twitch, props.loading, props.visible);
+
+
     return(<div className={`Ext ${props.themeClass}`}>
-        {(!props.loading && props.visible) ? (<div>
-        
-            <h1>App Component</h1>
-            
-            <hr/>
+        <h1>App Component</h1><hr/>
 
-            <OAuth auth={props.auth} />
-        
-        </div>) : "Loading..."}
+        {(!props.loading && props.visible) ? (<OAuth auth={props.auth} />) : "Loading..."}
     </div>);
 }
 
