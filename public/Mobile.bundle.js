@@ -28,7 +28,7 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 function OAuth(props) {
   var idIsShared = oauth_default().eval.sharedId(props.auth);
   console.log("displaying", props.auth);
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "token: ", props.auth.token), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "@userId isShared: ", idIsShared), idIsShared && /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "isModerator: ", props.auth.isMod)), /*#__PURE__*/react.createElement("hr", null), props.auth.isMod && /*#__PURE__*/react.createElement("input", {
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "@userId isShared: ", idIsShared), idIsShared && /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), props.auth.isMod && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
   }));
@@ -377,46 +377,43 @@ module.exports = diag;
 /***/ 662:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
+var jose = __webpack_require__(289);
+
 var defaultState = {
-  token: "",
-  opaqueId: "",
-  isMod: false,
   channelId: "",
   clientId: "",
+  opaqueId: "",
   userId: "",
   role: ""
 };
 
 function setToken(credentials, setAuth) {
+  console.log("PRESENTED: ", credentials);
+
   if (credentials.token) {
     var token = credentials.token;
-    var opaqueId = credentials.userId;
-    var isMod = false;
     var channelId = credentials.channelId;
     var clientId = credentials.clientId;
+    var opaqueId = credentials.userId;
     var userId = "";
     var role = "";
 
     try {
-      console.log(credentials);
-
-      var decoded = (__webpack_require__(423).decode)(token);
-
-      console.log(decoded);
-      isMod = decoded.role === 'broadcaster' || decoded.role === 'moderator';
-      userId = decoded.userId;
+      var decoded = jose.decodeJwt(token);
+      console.log("DECODED: ", decoded);
+      if (decoded.iat > decoded.exp || decoded.exp < Math.floor(new Date().getTime() / 1000) || decoded.opaque_user_id !== opaqueId || decoded.channel_id !== channelId) throw "Invalid Credentials";
+      userId = decoded.user_id;
       role = decoded.role;
-    } catch (_unused) {
+    } catch (e) {
+      console.log("ERROR:", e);
       token = '';
       opaqueId = '';
     }
 
     setAuth({
-      token: token,
-      opaqueId: opaqueId,
-      isMod: isMod,
       channelId: channelId,
       clientId: clientId,
+      opaqueId: opaqueId,
       userId: userId,
       role: role
     });
@@ -427,12 +424,16 @@ var isDefined = function isDefined(pointer) {
   return pointer !== undefined && pointer !== null && pointer !== false;
 };
 
+var isMod = function isMod(auth) {
+  return auth.role === "broadcaster" || auth.role === "moderator";
+};
+
 var loggedIn = function loggedIn(auth) {
   return auth.opaqueId[0] === 'U' && isDefined(auth.opaqueId);
 };
 
 var sharedId = function sharedId(auth) {
-  return !!auth.userId;
+  return auth.userId !== "";
 }; // NOT SAFE! Backend Verification Required.
 
 
@@ -444,6 +445,7 @@ module.exports = {
   defaultState: defaultState,
   setToken: setToken,
   eval: {
+    isMod: isMod,
     loggedIn: loggedIn,
     sharedId: sharedId,
     authenticated: authenticated
@@ -716,7 +718,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "b7cacf18f28a6efcfa26"; }
+/******/ 		__webpack_require__.h = function() { return "e2f4f11b1d1ce7b82dfa"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -1761,7 +1763,7 @@ if (true) {
 /******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [507], function() { return __webpack_require__(96); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [174], function() { return __webpack_require__(96); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

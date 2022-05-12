@@ -15,7 +15,7 @@ function OAuth(props) {
             <li>opaqueId: {props.auth.opaqueId}</li>
             <li>@userId isShared: {idIsShared}</li>
             {idIsShared && (<li>userId: {props.auth.userId}</li>)}
-            <li>isModerator: {props.auth.isMod}</li>
+            <li>role: {props.auth.role}</li>
         </ul>
 
         <hr/>
