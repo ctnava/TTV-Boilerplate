@@ -38,8 +38,10 @@ https://localhost:8080/
 }
 ```
 
-### Commands
+### Config
 ```
+"backendCommand": "node api/app.js",
+"backendFolderName": "temp",
 "frontendCommand": "yarn host",
 "frontendFolderName": "public",
 "usingRandomFrontendHostingPort": false

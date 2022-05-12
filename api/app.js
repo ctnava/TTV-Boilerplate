@@ -13,9 +13,14 @@ switch (mode) {
         url = "https://www.twitch.tv/";
 }
 
+const pubDir = "./apiPub";
+const pathToReports = pubDir + "/reports.json";
+if (!fs.existsSync(pubDir)) fs.mkdirSync(pubDir);
+
 const app = express();
 app.use(bodyParser.json());
 app.use(cors({origin: url}));
+app.use('/temp', express.static('temp'));
 const port = process.env.BACKEND_PORT;
 app.listen(port ,()=>{console.log("Server Started on Port:" + port)});
 app.get('/', (req, res)=>{res.json("Hello, welcome to my back end! Now git out.")});
@@ -31,7 +36,6 @@ const invalidHeader = (headers, auth) => {
 }
 
 
-const pathToReports = "./api/reports.json";
 const defaultArchive = { archive:[] };
 app.route('/bad_actor')
 .post((req, res) => {
