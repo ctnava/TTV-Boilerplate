@@ -44,7 +44,7 @@ function Config(props) {
   Config_diag_default()(props.twitch, props.type, props.loading, props.auth);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? oauth_default().eval.isMod(props.auth) ? /*#__PURE__*/react.createElement(OAuthDisplay, {
+  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? oauth_default().eval.isMod(props.auth) ? /*#__PURE__*/react.createElement(OAuthDisplay, {
     auth: props.auth
   }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("p", null, "Configuration Not Required") : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
@@ -62,7 +62,7 @@ function App(props) {
   App_diag_default()(props.twitch, props.type, props.loading, props.visible);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "App - ", props.type), /*#__PURE__*/react.createElement("hr", null), !props.loading && props.visible ? /*#__PURE__*/react.createElement(OAuthDisplay, {
+  }, /*#__PURE__*/react.createElement("h1", null, "App - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading && props.visible ? /*#__PURE__*/react.createElement(OAuthDisplay, {
     auth: props.auth
   }) : "Loading...");
 }
@@ -720,7 +720,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "843178f59ca706f291ee"; }
+/******/ 		__webpack_require__.h = function() { return "49c145a853b5816db92e"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
