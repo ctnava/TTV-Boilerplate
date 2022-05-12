@@ -19,7 +19,7 @@ function inputs(mode) {
             inject: 'body',
             title: point.name,
             chunks: point.name,
-            template: './webpack/template.ejs',
+            template: './templates/html.ejs',
             filename: `${point.out}`
             };
             plugins.push(new HtmlWebpackPlugin(options));
