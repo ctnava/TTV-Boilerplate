@@ -1,5 +1,5 @@
-const jose = require("jose");
-const api = require("./api.js");
+import * as jose from "jose";
+import api from "./api.js";
 const fail = "LOGIN_FAILURE";
 
 
@@ -74,7 +74,7 @@ const broadcaster   = (auth) => {return (auth.role === "broadcaster")};
 const moderator     = (auth) => {return (broadcaster(auth) || auth.role === "moderator")};
 
 
-module.exports = { 
+export default { 
     states,
 
     set, 

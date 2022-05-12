@@ -1,11 +1,21 @@
 require('dotenv').config()
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const fs = require('fs');
 
+const { mode, devrig } = JSON.parse(fs.readFileSync("./api/env.json"));
+var url;
+switch (mode) {
+    case "development":
+        url = devrig ? "https://localhost:8080" : "http://localhost:8080";
+    default:
+        url = "https://www.twitch.tv/";
+}
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors({origin: url}));
 const port = process.env.BACKEND_PORT;
 app.listen(port ,()=>{console.log("Server Started on Port:" + port)});
 app.get('/', (req, res)=>{res.json("Hello, welcome to my back end! Now git out.")});

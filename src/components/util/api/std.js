@@ -1,5 +1,5 @@
-const base = require("./base");
-const endpoint = require("./endpoint");
+import base from "./base";
+import endpoint from "./endpoint";
 
 
 const header = (auth) => {
@@ -28,4 +28,4 @@ const input = (route, rawData, auth) => {
 }
 
 
-module.exports = { header, data, input }
+export default { header, data, input };

@@ -1,11 +1,18 @@
+const fs = require("fs");
 const { rules, resolve, optimization } = require("./webpack/input");
 const server = require("./webpack/server");
 const generate = require("./webpack/generate");
 
+
+const falsyVals = ["", undefined, false, null];
+const pathToApiEnv = "./api/env.json";
 module.exports = (env, argv) => {
-  const { entry, plugins } = generate.inputs(argv.mode);
+  const mode = argv.mode;
+  const devrig = (!falsyVals.includes(env.devrig));
+  fs.writeFileSync(pathToApiEnv, JSON.stringify({mode,devrig}, null, 2)); 
+
+  const { entry, plugins } = generate.inputs(mode);
   const output = generate.outputs(__dirname);
-  const devrig = (env.devrig === true);
 
   var config = {
     module: {rules},

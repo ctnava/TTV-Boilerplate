@@ -1,4 +1,4 @@
-const base = require("./base");
+import base from "./base";
 
 
 const endpoint = (route) => {
@@ -7,4 +7,4 @@ const endpoint = (route) => {
 };
 
 
-module.exports = endpoint;
+export default endpoint;

@@ -1,4 +1,4 @@
-const base = require("./api/base");
-const endpoint = require("./api/endpoint");
-const req = require("./api/axiosRequests");
-module.exports = { base, endpoint, req };
+import base from "./api/base";
+import endpoint from "./api/endpoint";
+import req from "./api/axiosRequests";
+export default { base, endpoint, req };

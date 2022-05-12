@@ -1,9 +1,2382 @@
-"use strict";
-(self["webpackChunkttv_boilerplate"] = self["webpackChunkttv_boilerplate"] || []).push([[174],{
+(self["webpackChunkttv_boilerplate"] = self["webpackChunkttv_boilerplate"] || []).push([[589],{
 
-/***/ 645:
+/***/ 7757:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+module.exports = __webpack_require__(5666);
+
+
+/***/ }),
+
+/***/ 9669:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+module.exports = __webpack_require__(1609);
+
+/***/ }),
+
+/***/ 5448:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var settle = __webpack_require__(6026);
+var cookies = __webpack_require__(4372);
+var buildURL = __webpack_require__(5327);
+var buildFullPath = __webpack_require__(4097);
+var parseHeaders = __webpack_require__(4109);
+var isURLSameOrigin = __webpack_require__(7985);
+var transitionalDefaults = __webpack_require__(7874);
+var AxiosError = __webpack_require__(2648);
+var CanceledError = __webpack_require__(644);
+var parseProtocol = __webpack_require__(205);
+
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+    var responseType = config.responseType;
+    var onCanceled;
+    function done() {
+      if (config.cancelToken) {
+        config.cancelToken.unsubscribe(onCanceled);
+      }
+
+      if (config.signal) {
+        config.signal.removeEventListener('abort', onCanceled);
+      }
+    }
+
+    if (utils.isFormData(requestData) && utils.isStandardBrowserEnv()) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    var fullPath = buildFullPath(config.baseURL, config.url);
+
+    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    function onloadend() {
+      if (!request) {
+        return;
+      }
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !responseType || responseType === 'text' ||  responseType === 'json' ?
+        request.responseText : request.response;
+      var response = {
+        data: responseData,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request
+      };
+
+      settle(function _resolve(value) {
+        resolve(value);
+        done();
+      }, function _reject(err) {
+        reject(err);
+        done();
+      }, response);
+
+      // Clean up request
+      request = null;
+    }
+
+    if ('onloadend' in request) {
+      // Use onloadend if available
+      request.onloadend = onloadend;
+    } else {
+      // Listen for ready state to emulate onloadend
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+
+        // The request errored out and we didn't get a response, this will be
+        // handled by onerror instead
+        // With one exception: request that using file: protocol, most browsers
+        // will return status as 0 even though it's a successful request
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+          return;
+        }
+        // readystate handler is calling before onerror or ontimeout handlers,
+        // so we should call onloadend on the next 'tick'
+        setTimeout(onloadend);
+      };
+    }
+
+    // Handle browser request cancellation (as opposed to a manual cancellation)
+    request.onabort = function handleAbort() {
+      if (!request) {
+        return;
+      }
+
+      reject(new AxiosError('Request aborted', AxiosError.ECONNABORTED, config, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, request, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      var timeoutErrorMessage = config.timeout ? 'timeout of ' + config.timeout + 'ms exceeded' : 'timeout exceeded';
+      var transitional = config.transitional || transitionalDefaults;
+      if (config.timeoutErrorMessage) {
+        timeoutErrorMessage = config.timeoutErrorMessage;
+      }
+      reject(new AxiosError(
+        timeoutErrorMessage,
+        transitional.clarifyTimeoutError ? AxiosError.ETIMEDOUT : AxiosError.ECONNABORTED,
+        config,
+        request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
+        cookies.read(config.xsrfCookieName) :
+        undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (!utils.isUndefined(config.withCredentials)) {
+      request.withCredentials = !!config.withCredentials;
+    }
+
+    // Add responseType to request if needed
+    if (responseType && responseType !== 'json') {
+      request.responseType = config.responseType;
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken || config.signal) {
+      // Handle cancellation
+      // eslint-disable-next-line func-names
+      onCanceled = function(cancel) {
+        if (!request) {
+          return;
+        }
+        reject(!cancel || (cancel && cancel.type) ? new CanceledError() : cancel);
+        request.abort();
+        request = null;
+      };
+
+      config.cancelToken && config.cancelToken.subscribe(onCanceled);
+      if (config.signal) {
+        config.signal.aborted ? onCanceled() : config.signal.addEventListener('abort', onCanceled);
+      }
+    }
+
+    if (!requestData) {
+      requestData = null;
+    }
+
+    var protocol = parseProtocol(fullPath);
+
+    if (protocol && [ 'http', 'https', 'file' ].indexOf(protocol) === -1) {
+      reject(new AxiosError('Unsupported protocol ' + protocol + ':', AxiosError.ERR_BAD_REQUEST, config));
+      return;
+    }
+
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+
+/***/ }),
+
+/***/ 1609:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var bind = __webpack_require__(1849);
+var Axios = __webpack_require__(321);
+var mergeConfig = __webpack_require__(7185);
+var defaults = __webpack_require__(5546);
+
+/**
+ * Create an instance of Axios
+ *
+ * @param {Object} defaultConfig The default config for the instance
+ * @return {Axios} A new instance of Axios
+ */
+function createInstance(defaultConfig) {
+  var context = new Axios(defaultConfig);
+  var instance = bind(Axios.prototype.request, context);
+
+  // Copy axios.prototype to instance
+  utils.extend(instance, Axios.prototype, context);
+
+  // Copy context to instance
+  utils.extend(instance, context);
+
+  // Factory for creating new instances
+  instance.create = function create(instanceConfig) {
+    return createInstance(mergeConfig(defaultConfig, instanceConfig));
+  };
+
+  return instance;
+}
+
+// Create the default instance to be exported
+var axios = createInstance(defaults);
+
+// Expose Axios class to allow class inheritance
+axios.Axios = Axios;
+
+// Expose Cancel & CancelToken
+axios.CanceledError = __webpack_require__(644);
+axios.CancelToken = __webpack_require__(4972);
+axios.isCancel = __webpack_require__(6502);
+axios.VERSION = (__webpack_require__(7288).version);
+axios.toFormData = __webpack_require__(7675);
+
+// Expose AxiosError class
+axios.AxiosError = __webpack_require__(2648);
+
+// alias for CanceledError for backward compatibility
+axios.Cancel = axios.CanceledError;
+
+// Expose all/spread
+axios.all = function all(promises) {
+  return Promise.all(promises);
+};
+axios.spread = __webpack_require__(8713);
+
+// Expose isAxiosError
+axios.isAxiosError = __webpack_require__(6268);
+
+module.exports = axios;
+
+// Allow use of default import syntax in TypeScript
+module.exports["default"] = axios;
+
+
+/***/ }),
+
+/***/ 4972:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var CanceledError = __webpack_require__(644);
+
+/**
+ * A `CancelToken` is an object that can be used to request cancellation of an operation.
+ *
+ * @class
+ * @param {Function} executor The executor function.
+ */
+function CancelToken(executor) {
+  if (typeof executor !== 'function') {
+    throw new TypeError('executor must be a function.');
+  }
+
+  var resolvePromise;
+
+  this.promise = new Promise(function promiseExecutor(resolve) {
+    resolvePromise = resolve;
+  });
+
+  var token = this;
+
+  // eslint-disable-next-line func-names
+  this.promise.then(function(cancel) {
+    if (!token._listeners) return;
+
+    var i;
+    var l = token._listeners.length;
+
+    for (i = 0; i < l; i++) {
+      token._listeners[i](cancel);
+    }
+    token._listeners = null;
+  });
+
+  // eslint-disable-next-line func-names
+  this.promise.then = function(onfulfilled) {
+    var _resolve;
+    // eslint-disable-next-line func-names
+    var promise = new Promise(function(resolve) {
+      token.subscribe(resolve);
+      _resolve = resolve;
+    }).then(onfulfilled);
+
+    promise.cancel = function reject() {
+      token.unsubscribe(_resolve);
+    };
+
+    return promise;
+  };
+
+  executor(function cancel(message) {
+    if (token.reason) {
+      // Cancellation has already been requested
+      return;
+    }
+
+    token.reason = new CanceledError(message);
+    resolvePromise(token.reason);
+  });
+}
+
+/**
+ * Throws a `CanceledError` if cancellation has been requested.
+ */
+CancelToken.prototype.throwIfRequested = function throwIfRequested() {
+  if (this.reason) {
+    throw this.reason;
+  }
+};
+
+/**
+ * Subscribe to the cancel signal
+ */
+
+CancelToken.prototype.subscribe = function subscribe(listener) {
+  if (this.reason) {
+    listener(this.reason);
+    return;
+  }
+
+  if (this._listeners) {
+    this._listeners.push(listener);
+  } else {
+    this._listeners = [listener];
+  }
+};
+
+/**
+ * Unsubscribe from the cancel signal
+ */
+
+CancelToken.prototype.unsubscribe = function unsubscribe(listener) {
+  if (!this._listeners) {
+    return;
+  }
+  var index = this._listeners.indexOf(listener);
+  if (index !== -1) {
+    this._listeners.splice(index, 1);
+  }
+};
+
+/**
+ * Returns an object that contains a new `CancelToken` and a function that, when called,
+ * cancels the `CancelToken`.
+ */
+CancelToken.source = function source() {
+  var cancel;
+  var token = new CancelToken(function executor(c) {
+    cancel = c;
+  });
+  return {
+    token: token,
+    cancel: cancel
+  };
+};
+
+module.exports = CancelToken;
+
+
+/***/ }),
+
+/***/ 644:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var AxiosError = __webpack_require__(2648);
+var utils = __webpack_require__(4867);
+
+/**
+ * A `CanceledError` is an object that is thrown when an operation is canceled.
+ *
+ * @class
+ * @param {string=} message The message.
+ */
+function CanceledError(message) {
+  // eslint-disable-next-line no-eq-null,eqeqeq
+  AxiosError.call(this, message == null ? 'canceled' : message, AxiosError.ERR_CANCELED);
+  this.name = 'CanceledError';
+}
+
+utils.inherits(CanceledError, AxiosError, {
+  __CANCEL__: true
+});
+
+module.exports = CanceledError;
+
+
+/***/ }),
+
+/***/ 6502:
 /***/ (function(module) {
 
+"use strict";
+
+
+module.exports = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+
+/***/ }),
+
+/***/ 321:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var buildURL = __webpack_require__(5327);
+var InterceptorManager = __webpack_require__(782);
+var dispatchRequest = __webpack_require__(3572);
+var mergeConfig = __webpack_require__(7185);
+var buildFullPath = __webpack_require__(4097);
+var validator = __webpack_require__(4875);
+
+var validators = validator.validators;
+/**
+ * Create a new instance of Axios
+ *
+ * @param {Object} instanceConfig The default config for the instance
+ */
+function Axios(instanceConfig) {
+  this.defaults = instanceConfig;
+  this.interceptors = {
+    request: new InterceptorManager(),
+    response: new InterceptorManager()
+  };
+}
+
+/**
+ * Dispatch a request
+ *
+ * @param {Object} config The config specific for this request (merged with this.defaults)
+ */
+Axios.prototype.request = function request(configOrUrl, config) {
+  /*eslint no-param-reassign:0*/
+  // Allow for axios('example/url'[, config]) a la fetch API
+  if (typeof configOrUrl === 'string') {
+    config = config || {};
+    config.url = configOrUrl;
+  } else {
+    config = configOrUrl || {};
+  }
+
+  config = mergeConfig(this.defaults, config);
+
+  // Set config.method
+  if (config.method) {
+    config.method = config.method.toLowerCase();
+  } else if (this.defaults.method) {
+    config.method = this.defaults.method.toLowerCase();
+  } else {
+    config.method = 'get';
+  }
+
+  var transitional = config.transitional;
+
+  if (transitional !== undefined) {
+    validator.assertOptions(transitional, {
+      silentJSONParsing: validators.transitional(validators.boolean),
+      forcedJSONParsing: validators.transitional(validators.boolean),
+      clarifyTimeoutError: validators.transitional(validators.boolean)
+    }, false);
+  }
+
+  // filter out skipped interceptors
+  var requestInterceptorChain = [];
+  var synchronousRequestInterceptors = true;
+  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+    if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(config) === false) {
+      return;
+    }
+
+    synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+
+    requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  var responseInterceptorChain = [];
+  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+    responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  var promise;
+
+  if (!synchronousRequestInterceptors) {
+    var chain = [dispatchRequest, undefined];
+
+    Array.prototype.unshift.apply(chain, requestInterceptorChain);
+    chain = chain.concat(responseInterceptorChain);
+
+    promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+
+    return promise;
+  }
+
+
+  var newConfig = config;
+  while (requestInterceptorChain.length) {
+    var onFulfilled = requestInterceptorChain.shift();
+    var onRejected = requestInterceptorChain.shift();
+    try {
+      newConfig = onFulfilled(newConfig);
+    } catch (error) {
+      onRejected(error);
+      break;
+    }
+  }
+
+  try {
+    promise = dispatchRequest(newConfig);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  while (responseInterceptorChain.length) {
+    promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
+  }
+
+  return promise;
+};
+
+Axios.prototype.getUri = function getUri(config) {
+  config = mergeConfig(this.defaults, config);
+  var fullPath = buildFullPath(config.baseURL, config.url);
+  return buildURL(fullPath, config.params, config.paramsSerializer);
+};
+
+// Provide aliases for supported request methods
+utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+  /*eslint func-names:0*/
+  Axios.prototype[method] = function(url, config) {
+    return this.request(mergeConfig(config || {}, {
+      method: method,
+      url: url,
+      data: (config || {}).data
+    }));
+  };
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  /*eslint func-names:0*/
+
+  function generateHTTPMethod(isForm) {
+    return function httpMethod(url, data, config) {
+      return this.request(mergeConfig(config || {}, {
+        method: method,
+        headers: isForm ? {
+          'Content-Type': 'multipart/form-data'
+        } : {},
+        url: url,
+        data: data
+      }));
+    };
+  }
+
+  Axios.prototype[method] = generateHTTPMethod();
+
+  Axios.prototype[method + 'Form'] = generateHTTPMethod(true);
+});
+
+module.exports = Axios;
+
+
+/***/ }),
+
+/***/ 2648:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [config] The config.
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+function AxiosError(message, code, config, request, response) {
+  Error.call(this);
+  this.message = message;
+  this.name = 'AxiosError';
+  code && (this.code = code);
+  config && (this.config = config);
+  request && (this.request = request);
+  response && (this.response = response);
+}
+
+utils.inherits(AxiosError, Error, {
+  toJSON: function toJSON() {
+    return {
+      // Standard
+      message: this.message,
+      name: this.name,
+      // Microsoft
+      description: this.description,
+      number: this.number,
+      // Mozilla
+      fileName: this.fileName,
+      lineNumber: this.lineNumber,
+      columnNumber: this.columnNumber,
+      stack: this.stack,
+      // Axios
+      config: this.config,
+      code: this.code,
+      status: this.response && this.response.status ? this.response.status : null
+    };
+  }
+});
+
+var prototype = AxiosError.prototype;
+var descriptors = {};
+
+[
+  'ERR_BAD_OPTION_VALUE',
+  'ERR_BAD_OPTION',
+  'ECONNABORTED',
+  'ETIMEDOUT',
+  'ERR_NETWORK',
+  'ERR_FR_TOO_MANY_REDIRECTS',
+  'ERR_DEPRECATED',
+  'ERR_BAD_RESPONSE',
+  'ERR_BAD_REQUEST',
+  'ERR_CANCELED'
+// eslint-disable-next-line func-names
+].forEach(function(code) {
+  descriptors[code] = {value: code};
+});
+
+Object.defineProperties(AxiosError, descriptors);
+Object.defineProperty(prototype, 'isAxiosError', {value: true});
+
+// eslint-disable-next-line func-names
+AxiosError.from = function(error, code, config, request, response, customProps) {
+  var axiosError = Object.create(prototype);
+
+  utils.toFlatObject(error, axiosError, function filter(obj) {
+    return obj !== Error.prototype;
+  });
+
+  AxiosError.call(axiosError, error.message, code, config, request, response);
+
+  axiosError.name = error.name;
+
+  customProps && Object.assign(axiosError, customProps);
+
+  return axiosError;
+};
+
+module.exports = AxiosError;
+
+
+/***/ }),
+
+/***/ 782:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+function InterceptorManager() {
+  this.handlers = [];
+}
+
+/**
+ * Add a new interceptor to the stack
+ *
+ * @param {Function} fulfilled The function to handle `then` for a `Promise`
+ * @param {Function} rejected The function to handle `reject` for a `Promise`
+ *
+ * @return {Number} An ID used to remove interceptor later
+ */
+InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
+  this.handlers.push({
+    fulfilled: fulfilled,
+    rejected: rejected,
+    synchronous: options ? options.synchronous : false,
+    runWhen: options ? options.runWhen : null
+  });
+  return this.handlers.length - 1;
+};
+
+/**
+ * Remove an interceptor from the stack
+ *
+ * @param {Number} id The ID that was returned by `use`
+ */
+InterceptorManager.prototype.eject = function eject(id) {
+  if (this.handlers[id]) {
+    this.handlers[id] = null;
+  }
+};
+
+/**
+ * Iterate over all the registered interceptors
+ *
+ * This method is particularly useful for skipping over any
+ * interceptors that may have become `null` calling `eject`.
+ *
+ * @param {Function} fn The function to call for each interceptor
+ */
+InterceptorManager.prototype.forEach = function forEach(fn) {
+  utils.forEach(this.handlers, function forEachHandler(h) {
+    if (h !== null) {
+      fn(h);
+    }
+  });
+};
+
+module.exports = InterceptorManager;
+
+
+/***/ }),
+
+/***/ 4097:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var isAbsoluteURL = __webpack_require__(1793);
+var combineURLs = __webpack_require__(7303);
+
+/**
+ * Creates a new URL by combining the baseURL with the requestedURL,
+ * only when the requestedURL is not already an absolute URL.
+ * If the requestURL is absolute, this function returns the requestedURL untouched.
+ *
+ * @param {string} baseURL The base URL
+ * @param {string} requestedURL Absolute or relative URL to combine
+ * @returns {string} The combined full path
+ */
+module.exports = function buildFullPath(baseURL, requestedURL) {
+  if (baseURL && !isAbsoluteURL(requestedURL)) {
+    return combineURLs(baseURL, requestedURL);
+  }
+  return requestedURL;
+};
+
+
+/***/ }),
+
+/***/ 3572:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var transformData = __webpack_require__(8527);
+var isCancel = __webpack_require__(6502);
+var defaults = __webpack_require__(5546);
+var CanceledError = __webpack_require__(644);
+
+/**
+ * Throws a `CanceledError` if cancellation has been requested.
+ */
+function throwIfCancellationRequested(config) {
+  if (config.cancelToken) {
+    config.cancelToken.throwIfRequested();
+  }
+
+  if (config.signal && config.signal.aborted) {
+    throw new CanceledError();
+  }
+}
+
+/**
+ * Dispatch a request to the server using the configured adapter.
+ *
+ * @param {object} config The config that is to be used for the request
+ * @returns {Promise} The Promise to be fulfilled
+ */
+module.exports = function dispatchRequest(config) {
+  throwIfCancellationRequested(config);
+
+  // Ensure headers exist
+  config.headers = config.headers || {};
+
+  // Transform request data
+  config.data = transformData.call(
+    config,
+    config.data,
+    config.headers,
+    config.transformRequest
+  );
+
+  // Flatten headers
+  config.headers = utils.merge(
+    config.headers.common || {},
+    config.headers[config.method] || {},
+    config.headers
+  );
+
+  utils.forEach(
+    ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
+    function cleanHeaderConfig(method) {
+      delete config.headers[method];
+    }
+  );
+
+  var adapter = config.adapter || defaults.adapter;
+
+  return adapter(config).then(function onAdapterResolution(response) {
+    throwIfCancellationRequested(config);
+
+    // Transform response data
+    response.data = transformData.call(
+      config,
+      response.data,
+      response.headers,
+      config.transformResponse
+    );
+
+    return response;
+  }, function onAdapterRejection(reason) {
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config);
+
+      // Transform response data
+      if (reason && reason.response) {
+        reason.response.data = transformData.call(
+          config,
+          reason.response.data,
+          reason.response.headers,
+          config.transformResponse
+        );
+      }
+    }
+
+    return Promise.reject(reason);
+  });
+};
+
+
+/***/ }),
+
+/***/ 7185:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+/**
+ * Config-specific merge-function which creates a new config-object
+ * by merging two configuration objects together.
+ *
+ * @param {Object} config1
+ * @param {Object} config2
+ * @returns {Object} New object resulting from merging config2 to config1
+ */
+module.exports = function mergeConfig(config1, config2) {
+  // eslint-disable-next-line no-param-reassign
+  config2 = config2 || {};
+  var config = {};
+
+  function getMergedValue(target, source) {
+    if (utils.isPlainObject(target) && utils.isPlainObject(source)) {
+      return utils.merge(target, source);
+    } else if (utils.isPlainObject(source)) {
+      return utils.merge({}, source);
+    } else if (utils.isArray(source)) {
+      return source.slice();
+    }
+    return source;
+  }
+
+  // eslint-disable-next-line consistent-return
+  function mergeDeepProperties(prop) {
+    if (!utils.isUndefined(config2[prop])) {
+      return getMergedValue(config1[prop], config2[prop]);
+    } else if (!utils.isUndefined(config1[prop])) {
+      return getMergedValue(undefined, config1[prop]);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function valueFromConfig2(prop) {
+    if (!utils.isUndefined(config2[prop])) {
+      return getMergedValue(undefined, config2[prop]);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function defaultToConfig2(prop) {
+    if (!utils.isUndefined(config2[prop])) {
+      return getMergedValue(undefined, config2[prop]);
+    } else if (!utils.isUndefined(config1[prop])) {
+      return getMergedValue(undefined, config1[prop]);
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  function mergeDirectKeys(prop) {
+    if (prop in config2) {
+      return getMergedValue(config1[prop], config2[prop]);
+    } else if (prop in config1) {
+      return getMergedValue(undefined, config1[prop]);
+    }
+  }
+
+  var mergeMap = {
+    'url': valueFromConfig2,
+    'method': valueFromConfig2,
+    'data': valueFromConfig2,
+    'baseURL': defaultToConfig2,
+    'transformRequest': defaultToConfig2,
+    'transformResponse': defaultToConfig2,
+    'paramsSerializer': defaultToConfig2,
+    'timeout': defaultToConfig2,
+    'timeoutMessage': defaultToConfig2,
+    'withCredentials': defaultToConfig2,
+    'adapter': defaultToConfig2,
+    'responseType': defaultToConfig2,
+    'xsrfCookieName': defaultToConfig2,
+    'xsrfHeaderName': defaultToConfig2,
+    'onUploadProgress': defaultToConfig2,
+    'onDownloadProgress': defaultToConfig2,
+    'decompress': defaultToConfig2,
+    'maxContentLength': defaultToConfig2,
+    'maxBodyLength': defaultToConfig2,
+    'beforeRedirect': defaultToConfig2,
+    'transport': defaultToConfig2,
+    'httpAgent': defaultToConfig2,
+    'httpsAgent': defaultToConfig2,
+    'cancelToken': defaultToConfig2,
+    'socketPath': defaultToConfig2,
+    'responseEncoding': defaultToConfig2,
+    'validateStatus': mergeDirectKeys
+  };
+
+  utils.forEach(Object.keys(config1).concat(Object.keys(config2)), function computeConfigValue(prop) {
+    var merge = mergeMap[prop] || mergeDeepProperties;
+    var configValue = merge(prop);
+    (utils.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
+  });
+
+  return config;
+};
+
+
+/***/ }),
+
+/***/ 6026:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var AxiosError = __webpack_require__(2648);
+
+/**
+ * Resolve or reject a Promise based on response status.
+ *
+ * @param {Function} resolve A function that resolves the promise.
+ * @param {Function} reject A function that rejects the promise.
+ * @param {object} response The response.
+ */
+module.exports = function settle(resolve, reject, response) {
+  var validateStatus = response.config.validateStatus;
+  if (!response.status || !validateStatus || validateStatus(response.status)) {
+    resolve(response);
+  } else {
+    reject(new AxiosError(
+      'Request failed with status code ' + response.status,
+      [AxiosError.ERR_BAD_REQUEST, AxiosError.ERR_BAD_RESPONSE][Math.floor(response.status / 100) - 4],
+      response.config,
+      response.request,
+      response
+    ));
+  }
+};
+
+
+/***/ }),
+
+/***/ 8527:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var defaults = __webpack_require__(5546);
+
+/**
+ * Transform the data for a request or a response
+ *
+ * @param {Object|String} data The data to be transformed
+ * @param {Array} headers The headers for the request or response
+ * @param {Array|Function} fns A single function or Array of functions
+ * @returns {*} The resulting transformed data
+ */
+module.exports = function transformData(data, headers, fns) {
+  var context = this || defaults;
+  /*eslint no-param-reassign:0*/
+  utils.forEach(fns, function transform(fn) {
+    data = fn.call(context, data, headers);
+  });
+
+  return data;
+};
+
+
+/***/ }),
+
+/***/ 5546:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+var normalizeHeaderName = __webpack_require__(6016);
+var AxiosError = __webpack_require__(2648);
+var transitionalDefaults = __webpack_require__(7874);
+var toFormData = __webpack_require__(7675);
+
+var DEFAULT_CONTENT_TYPE = {
+  'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+function setContentTypeIfUnset(headers, value) {
+  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+    headers['Content-Type'] = value;
+  }
+}
+
+function getDefaultAdapter() {
+  var adapter;
+  if (typeof XMLHttpRequest !== 'undefined') {
+    // For browsers use XHR adapter
+    adapter = __webpack_require__(5448);
+  } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+    // For node use HTTP adapter
+    adapter = __webpack_require__(5448);
+  }
+  return adapter;
+}
+
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils.trim(rawValue);
+    } catch (e) {
+      if (e.name !== 'SyntaxError') {
+        throw e;
+      }
+    }
+  }
+
+  return (encoder || JSON.stringify)(rawValue);
+}
+
+var defaults = {
+
+  transitional: transitionalDefaults,
+
+  adapter: getDefaultAdapter(),
+
+  transformRequest: [function transformRequest(data, headers) {
+    normalizeHeaderName(headers, 'Accept');
+    normalizeHeaderName(headers, 'Content-Type');
+
+    if (utils.isFormData(data) ||
+      utils.isArrayBuffer(data) ||
+      utils.isBuffer(data) ||
+      utils.isStream(data) ||
+      utils.isFile(data) ||
+      utils.isBlob(data)
+    ) {
+      return data;
+    }
+    if (utils.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils.isURLSearchParams(data)) {
+      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+      return data.toString();
+    }
+
+    var isObjectPayload = utils.isObject(data);
+    var contentType = headers && headers['Content-Type'];
+
+    var isFileList;
+
+    if ((isFileList = utils.isFileList(data)) || (isObjectPayload && contentType === 'multipart/form-data')) {
+      var _FormData = this.env && this.env.FormData;
+      return toFormData(isFileList ? {'files[]': data} : data, _FormData && new _FormData());
+    } else if (isObjectPayload || contentType === 'application/json') {
+      setContentTypeIfUnset(headers, 'application/json');
+      return stringifySafely(data);
+    }
+
+    return data;
+  }],
+
+  transformResponse: [function transformResponse(data) {
+    var transitional = this.transitional || defaults.transitional;
+    var silentJSONParsing = transitional && transitional.silentJSONParsing;
+    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
+    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
+
+    if (strictJSONParsing || (forcedJSONParsing && utils.isString(data) && data.length)) {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === 'SyntaxError') {
+            throw AxiosError.from(e, AxiosError.ERR_BAD_RESPONSE, this, null, this.response);
+          }
+          throw e;
+        }
+      }
+    }
+
+    return data;
+  }],
+
+  /**
+   * A timeout in milliseconds to abort a request. If set to 0 (default) a
+   * timeout is not created.
+   */
+  timeout: 0,
+
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  maxContentLength: -1,
+  maxBodyLength: -1,
+
+  env: {
+    FormData: __webpack_require__(1623)
+  },
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  },
+
+  headers: {
+    common: {
+      'Accept': 'application/json, text/plain, */*'
+    }
+  }
+};
+
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+  defaults.headers[method] = {};
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+});
+
+module.exports = defaults;
+
+
+/***/ }),
+
+/***/ 7874:
+/***/ (function(module) {
+
+"use strict";
+
+
+module.exports = {
+  silentJSONParsing: true,
+  forcedJSONParsing: true,
+  clarifyTimeoutError: false
+};
+
+
+/***/ }),
+
+/***/ 7288:
+/***/ (function(module) {
+
+module.exports = {
+  "version": "0.27.2"
+};
+
+/***/ }),
+
+/***/ 1849:
+/***/ (function(module) {
+
+"use strict";
+
+
+module.exports = function bind(fn, thisArg) {
+  return function wrap() {
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+    return fn.apply(thisArg, args);
+  };
+};
+
+
+/***/ }),
+
+/***/ 5327:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
+}
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+
+/***/ }),
+
+/***/ 7303:
+/***/ (function(module) {
+
+"use strict";
+
+
+/**
+ * Creates a new URL by combining the specified URLs
+ *
+ * @param {string} baseURL The base URL
+ * @param {string} relativeURL The relative URL
+ * @returns {string} The combined URL
+ */
+module.exports = function combineURLs(baseURL, relativeURL) {
+  return relativeURL
+    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    : baseURL;
+};
+
+
+/***/ }),
+
+/***/ 4372:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs support document.cookie
+    (function standardBrowserEnv() {
+      return {
+        write: function write(name, value, expires, path, domain, secure) {
+          var cookie = [];
+          cookie.push(name + '=' + encodeURIComponent(value));
+
+          if (utils.isNumber(expires)) {
+            cookie.push('expires=' + new Date(expires).toGMTString());
+          }
+
+          if (utils.isString(path)) {
+            cookie.push('path=' + path);
+          }
+
+          if (utils.isString(domain)) {
+            cookie.push('domain=' + domain);
+          }
+
+          if (secure === true) {
+            cookie.push('secure');
+          }
+
+          document.cookie = cookie.join('; ');
+        },
+
+        read: function read(name) {
+          var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+          return (match ? decodeURIComponent(match[3]) : null);
+        },
+
+        remove: function remove(name) {
+          this.write(name, '', Date.now() - 86400000);
+        }
+      };
+    })() :
+
+  // Non standard browser env (web workers, react-native) lack needed support.
+    (function nonStandardBrowserEnv() {
+      return {
+        write: function write() {},
+        read: function read() { return null; },
+        remove: function remove() {}
+      };
+    })()
+);
+
+
+/***/ }),
+
+/***/ 1793:
+/***/ (function(module) {
+
+"use strict";
+
+
+/**
+ * Determines whether the specified URL is absolute
+ *
+ * @param {string} url The URL to test
+ * @returns {boolean} True if the specified URL is absolute, otherwise false
+ */
+module.exports = function isAbsoluteURL(url) {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+};
+
+
+/***/ }),
+
+/***/ 6268:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+/**
+ * Determines whether the payload is an error thrown by Axios
+ *
+ * @param {*} payload The value to test
+ * @returns {boolean} True if the payload is an error thrown by Axios, otherwise false
+ */
+module.exports = function isAxiosError(payload) {
+  return utils.isObject(payload) && (payload.isAxiosError === true);
+};
+
+
+/***/ }),
+
+/***/ 7985:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs have full support of the APIs needed to test
+  // whether the request URL is of the same origin as current location.
+    (function standardBrowserEnv() {
+      var msie = /(msie|trident)/i.test(navigator.userAgent);
+      var urlParsingNode = document.createElement('a');
+      var originURL;
+
+      /**
+    * Parse a URL to discover it's components
+    *
+    * @param {String} url The URL to be parsed
+    * @returns {Object}
+    */
+      function resolveURL(url) {
+        var href = url;
+
+        if (msie) {
+        // IE needs attribute set twice to normalize properties
+          urlParsingNode.setAttribute('href', href);
+          href = urlParsingNode.href;
+        }
+
+        urlParsingNode.setAttribute('href', href);
+
+        // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+        return {
+          href: urlParsingNode.href,
+          protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+          host: urlParsingNode.host,
+          search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+          hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+          hostname: urlParsingNode.hostname,
+          port: urlParsingNode.port,
+          pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
+            urlParsingNode.pathname :
+            '/' + urlParsingNode.pathname
+        };
+      }
+
+      originURL = resolveURL(window.location.href);
+
+      /**
+    * Determine if a URL shares the same origin as the current location
+    *
+    * @param {String} requestURL The URL to test
+    * @returns {boolean} True if URL shares the same origin, otherwise false
+    */
+      return function isURLSameOrigin(requestURL) {
+        var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+        return (parsed.protocol === originURL.protocol &&
+            parsed.host === originURL.host);
+      };
+    })() :
+
+  // Non standard browser envs (web workers, react-native) lack needed support.
+    (function nonStandardBrowserEnv() {
+      return function isURLSameOrigin() {
+        return true;
+      };
+    })()
+);
+
+
+/***/ }),
+
+/***/ 6016:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+module.exports = function normalizeHeaderName(headers, normalizedName) {
+  utils.forEach(headers, function processHeader(value, name) {
+    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+      headers[normalizedName] = value;
+      delete headers[name];
+    }
+  });
+};
+
+
+/***/ }),
+
+/***/ 1623:
+/***/ (function(module) {
+
+// eslint-disable-next-line strict
+module.exports = null;
+
+
+/***/ }),
+
+/***/ 4109:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+// Headers whose duplicates are ignored by node
+// c.f. https://nodejs.org/api/http.html#http_message_headers
+var ignoreDuplicateOf = [
+  'age', 'authorization', 'content-length', 'content-type', 'etag',
+  'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
+  'last-modified', 'location', 'max-forwards', 'proxy-authorization',
+  'referer', 'retry-after', 'user-agent'
+];
+
+/**
+ * Parse headers into an object
+ *
+ * ```
+ * Date: Wed, 27 Aug 2014 08:58:49 GMT
+ * Content-Type: application/json
+ * Connection: keep-alive
+ * Transfer-Encoding: chunked
+ * ```
+ *
+ * @param {String} headers Headers needing to be parsed
+ * @returns {Object} Headers parsed into an object
+ */
+module.exports = function parseHeaders(headers) {
+  var parsed = {};
+  var key;
+  var val;
+  var i;
+
+  if (!headers) { return parsed; }
+
+  utils.forEach(headers.split('\n'), function parser(line) {
+    i = line.indexOf(':');
+    key = utils.trim(line.substr(0, i)).toLowerCase();
+    val = utils.trim(line.substr(i + 1));
+
+    if (key) {
+      if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
+        return;
+      }
+      if (key === 'set-cookie') {
+        parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+      } else {
+        parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+      }
+    }
+  });
+
+  return parsed;
+};
+
+
+/***/ }),
+
+/***/ 205:
+/***/ (function(module) {
+
+"use strict";
+
+
+module.exports = function parseProtocol(url) {
+  var match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
+  return match && match[1] || '';
+};
+
+
+/***/ }),
+
+/***/ 8713:
+/***/ (function(module) {
+
+"use strict";
+
+
+/**
+ * Syntactic sugar for invoking a function and expanding an array for arguments.
+ *
+ * Common use case would be to use `Function.prototype.apply`.
+ *
+ *  ```js
+ *  function f(x, y, z) {}
+ *  var args = [1, 2, 3];
+ *  f.apply(null, args);
+ *  ```
+ *
+ * With `spread` this example can be re-written.
+ *
+ *  ```js
+ *  spread(function(x, y, z) {})([1, 2, 3]);
+ *  ```
+ *
+ * @param {Function} callback
+ * @returns {Function}
+ */
+module.exports = function spread(callback) {
+  return function wrap(arr) {
+    return callback.apply(null, arr);
+  };
+};
+
+
+/***/ }),
+
+/***/ 7675:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(4867);
+
+/**
+ * Convert a data object to FormData
+ * @param {Object} obj
+ * @param {?Object} [formData]
+ * @returns {Object}
+ **/
+
+function toFormData(obj, formData) {
+  // eslint-disable-next-line no-param-reassign
+  formData = formData || new FormData();
+
+  var stack = [];
+
+  function convertValue(value) {
+    if (value === null) return '';
+
+    if (utils.isDate(value)) {
+      return value.toISOString();
+    }
+
+    if (utils.isArrayBuffer(value) || utils.isTypedArray(value)) {
+      return typeof Blob === 'function' ? new Blob([value]) : Buffer.from(value);
+    }
+
+    return value;
+  }
+
+  function build(data, parentKey) {
+    if (utils.isPlainObject(data) || utils.isArray(data)) {
+      if (stack.indexOf(data) !== -1) {
+        throw Error('Circular reference detected in ' + parentKey);
+      }
+
+      stack.push(data);
+
+      utils.forEach(data, function each(value, key) {
+        if (utils.isUndefined(value)) return;
+        var fullKey = parentKey ? parentKey + '.' + key : key;
+        var arr;
+
+        if (value && !parentKey && typeof value === 'object') {
+          if (utils.endsWith(key, '{}')) {
+            // eslint-disable-next-line no-param-reassign
+            value = JSON.stringify(value);
+          } else if (utils.endsWith(key, '[]') && (arr = utils.toArray(value))) {
+            // eslint-disable-next-line func-names
+            arr.forEach(function(el) {
+              !utils.isUndefined(el) && formData.append(fullKey, convertValue(el));
+            });
+            return;
+          }
+        }
+
+        build(value, fullKey);
+      });
+
+      stack.pop();
+    } else {
+      formData.append(parentKey, convertValue(data));
+    }
+  }
+
+  build(obj);
+
+  return formData;
+}
+
+module.exports = toFormData;
+
+
+/***/ }),
+
+/***/ 4875:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var VERSION = (__webpack_require__(7288).version);
+var AxiosError = __webpack_require__(2648);
+
+var validators = {};
+
+// eslint-disable-next-line func-names
+['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
+  validators[type] = function validator(thing) {
+    return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
+  };
+});
+
+var deprecatedWarnings = {};
+
+/**
+ * Transitional option validator
+ * @param {function|boolean?} validator - set to false if the transitional option has been removed
+ * @param {string?} version - deprecated version / removed since version
+ * @param {string?} message - some message with additional info
+ * @returns {function}
+ */
+validators.transitional = function transitional(validator, version, message) {
+  function formatMessage(opt, desc) {
+    return '[Axios v' + VERSION + '] Transitional option \'' + opt + '\'' + desc + (message ? '. ' + message : '');
+  }
+
+  // eslint-disable-next-line func-names
+  return function(value, opt, opts) {
+    if (validator === false) {
+      throw new AxiosError(
+        formatMessage(opt, ' has been removed' + (version ? ' in ' + version : '')),
+        AxiosError.ERR_DEPRECATED
+      );
+    }
+
+    if (version && !deprecatedWarnings[opt]) {
+      deprecatedWarnings[opt] = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        formatMessage(
+          opt,
+          ' has been deprecated since v' + version + ' and will be removed in the near future'
+        )
+      );
+    }
+
+    return validator ? validator(value, opt, opts) : true;
+  };
+};
+
+/**
+ * Assert object's properties type
+ * @param {object} options
+ * @param {object} schema
+ * @param {boolean?} allowUnknown
+ */
+
+function assertOptions(options, schema, allowUnknown) {
+  if (typeof options !== 'object') {
+    throw new AxiosError('options must be an object', AxiosError.ERR_BAD_OPTION_VALUE);
+  }
+  var keys = Object.keys(options);
+  var i = keys.length;
+  while (i-- > 0) {
+    var opt = keys[i];
+    var validator = schema[opt];
+    if (validator) {
+      var value = options[opt];
+      var result = value === undefined || validator(value, opt, options);
+      if (result !== true) {
+        throw new AxiosError('option ' + opt + ' must be ' + result, AxiosError.ERR_BAD_OPTION_VALUE);
+      }
+      continue;
+    }
+    if (allowUnknown !== true) {
+      throw new AxiosError('Unknown option ' + opt, AxiosError.ERR_BAD_OPTION);
+    }
+  }
+}
+
+module.exports = {
+  assertOptions: assertOptions,
+  validators: validators
+};
+
+
+/***/ }),
+
+/***/ 4867:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+var bind = __webpack_require__(1849);
+
+// utils is a library of generic helper functions non-specific to axios
+
+var toString = Object.prototype.toString;
+
+// eslint-disable-next-line func-names
+var kindOf = (function(cache) {
+  // eslint-disable-next-line func-names
+  return function(thing) {
+    var str = toString.call(thing);
+    return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
+  };
+})(Object.create(null));
+
+function kindOfTest(type) {
+  type = type.toLowerCase();
+  return function isKindOf(thing) {
+    return kindOf(thing) === type;
+  };
+}
+
+/**
+ * Determine if a value is an Array
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an Array, otherwise false
+ */
+function isArray(val) {
+  return Array.isArray(val);
+}
+
+/**
+ * Determine if a value is undefined
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if the value is undefined, otherwise false
+ */
+function isUndefined(val) {
+  return typeof val === 'undefined';
+}
+
+/**
+ * Determine if a value is a Buffer
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Buffer, otherwise false
+ */
+function isBuffer(val) {
+  return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
+    && typeof val.constructor.isBuffer === 'function' && val.constructor.isBuffer(val);
+}
+
+/**
+ * Determine if a value is an ArrayBuffer
+ *
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an ArrayBuffer, otherwise false
+ */
+var isArrayBuffer = kindOfTest('ArrayBuffer');
+
+
+/**
+ * Determine if a value is a view on an ArrayBuffer
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
+ */
+function isArrayBufferView(val) {
+  var result;
+  if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
+    result = ArrayBuffer.isView(val);
+  } else {
+    result = (val) && (val.buffer) && (isArrayBuffer(val.buffer));
+  }
+  return result;
+}
+
+/**
+ * Determine if a value is a String
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a String, otherwise false
+ */
+function isString(val) {
+  return typeof val === 'string';
+}
+
+/**
+ * Determine if a value is a Number
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Number, otherwise false
+ */
+function isNumber(val) {
+  return typeof val === 'number';
+}
+
+/**
+ * Determine if a value is an Object
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an Object, otherwise false
+ */
+function isObject(val) {
+  return val !== null && typeof val === 'object';
+}
+
+/**
+ * Determine if a value is a plain Object
+ *
+ * @param {Object} val The value to test
+ * @return {boolean} True if value is a plain Object, otherwise false
+ */
+function isPlainObject(val) {
+  if (kindOf(val) !== 'object') {
+    return false;
+  }
+
+  var prototype = Object.getPrototypeOf(val);
+  return prototype === null || prototype === Object.prototype;
+}
+
+/**
+ * Determine if a value is a Date
+ *
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Date, otherwise false
+ */
+var isDate = kindOfTest('Date');
+
+/**
+ * Determine if a value is a File
+ *
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a File, otherwise false
+ */
+var isFile = kindOfTest('File');
+
+/**
+ * Determine if a value is a Blob
+ *
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Blob, otherwise false
+ */
+var isBlob = kindOfTest('Blob');
+
+/**
+ * Determine if a value is a FileList
+ *
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a File, otherwise false
+ */
+var isFileList = kindOfTest('FileList');
+
+/**
+ * Determine if a value is a Function
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Function, otherwise false
+ */
+function isFunction(val) {
+  return toString.call(val) === '[object Function]';
+}
+
+/**
+ * Determine if a value is a Stream
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Stream, otherwise false
+ */
+function isStream(val) {
+  return isObject(val) && isFunction(val.pipe);
+}
+
+/**
+ * Determine if a value is a FormData
+ *
+ * @param {Object} thing The value to test
+ * @returns {boolean} True if value is an FormData, otherwise false
+ */
+function isFormData(thing) {
+  var pattern = '[object FormData]';
+  return thing && (
+    (typeof FormData === 'function' && thing instanceof FormData) ||
+    toString.call(thing) === pattern ||
+    (isFunction(thing.toString) && thing.toString() === pattern)
+  );
+}
+
+/**
+ * Determine if a value is a URLSearchParams object
+ * @function
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a URLSearchParams object, otherwise false
+ */
+var isURLSearchParams = kindOfTest('URLSearchParams');
+
+/**
+ * Trim excess whitespace off the beginning and end of a string
+ *
+ * @param {String} str The String to trim
+ * @returns {String} The String freed of excess whitespace
+ */
+function trim(str) {
+  return str.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '');
+}
+
+/**
+ * Determine if we're running in a standard browser environment
+ *
+ * This allows axios to run in a web worker, and react-native.
+ * Both environments support XMLHttpRequest, but not fully standard globals.
+ *
+ * web workers:
+ *  typeof window -> undefined
+ *  typeof document -> undefined
+ *
+ * react-native:
+ *  navigator.product -> 'ReactNative'
+ * nativescript
+ *  navigator.product -> 'NativeScript' or 'NS'
+ */
+function isStandardBrowserEnv() {
+  if (typeof navigator !== 'undefined' && (navigator.product === 'ReactNative' ||
+                                           navigator.product === 'NativeScript' ||
+                                           navigator.product === 'NS')) {
+    return false;
+  }
+  return (
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined'
+  );
+}
+
+/**
+ * Iterate over an Array or an Object invoking a function for each item.
+ *
+ * If `obj` is an Array callback will be called passing
+ * the value, index, and complete array for each item.
+ *
+ * If 'obj' is an Object callback will be called passing
+ * the value, key, and complete object for each property.
+ *
+ * @param {Object|Array} obj The object to iterate
+ * @param {Function} fn The callback to invoke for each item
+ */
+function forEach(obj, fn) {
+  // Don't bother if no value provided
+  if (obj === null || typeof obj === 'undefined') {
+    return;
+  }
+
+  // Force an array if not already something iterable
+  if (typeof obj !== 'object') {
+    /*eslint no-param-reassign:0*/
+    obj = [obj];
+  }
+
+  if (isArray(obj)) {
+    // Iterate over array values
+    for (var i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    // Iterate over object keys
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        fn.call(null, obj[key], key, obj);
+      }
+    }
+  }
+}
+
+/**
+ * Accepts varargs expecting each argument to be an object, then
+ * immutably merges the properties of each object and returns result.
+ *
+ * When multiple objects contain the same key the later object in
+ * the arguments list will take precedence.
+ *
+ * Example:
+ *
+ * ```js
+ * var result = merge({foo: 123}, {foo: 456});
+ * console.log(result.foo); // outputs 456
+ * ```
+ *
+ * @param {Object} obj1 Object to merge
+ * @returns {Object} Result of all merge properties
+ */
+function merge(/* obj1, obj2, obj3, ... */) {
+  var result = {};
+  function assignValue(val, key) {
+    if (isPlainObject(result[key]) && isPlainObject(val)) {
+      result[key] = merge(result[key], val);
+    } else if (isPlainObject(val)) {
+      result[key] = merge({}, val);
+    } else if (isArray(val)) {
+      result[key] = val.slice();
+    } else {
+      result[key] = val;
+    }
+  }
+
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+
+/**
+ * Extends object a by mutably adding to it the properties of object b.
+ *
+ * @param {Object} a The object to be extended
+ * @param {Object} b The object to copy properties from
+ * @param {Object} thisArg The object to bind function to
+ * @return {Object} The resulting value of object a
+ */
+function extend(a, b, thisArg) {
+  forEach(b, function assignValue(val, key) {
+    if (thisArg && typeof val === 'function') {
+      a[key] = bind(val, thisArg);
+    } else {
+      a[key] = val;
+    }
+  });
+  return a;
+}
+
+/**
+ * Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
+ *
+ * @param {string} content with BOM
+ * @return {string} content value without BOM
+ */
+function stripBOM(content) {
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1);
+  }
+  return content;
+}
+
+/**
+ * Inherit the prototype methods from one constructor into another
+ * @param {function} constructor
+ * @param {function} superConstructor
+ * @param {object} [props]
+ * @param {object} [descriptors]
+ */
+
+function inherits(constructor, superConstructor, props, descriptors) {
+  constructor.prototype = Object.create(superConstructor.prototype, descriptors);
+  constructor.prototype.constructor = constructor;
+  props && Object.assign(constructor.prototype, props);
+}
+
+/**
+ * Resolve object with deep prototype chain to a flat object
+ * @param {Object} sourceObj source object
+ * @param {Object} [destObj]
+ * @param {Function} [filter]
+ * @returns {Object}
+ */
+
+function toFlatObject(sourceObj, destObj, filter) {
+  var props;
+  var i;
+  var prop;
+  var merged = {};
+
+  destObj = destObj || {};
+
+  do {
+    props = Object.getOwnPropertyNames(sourceObj);
+    i = props.length;
+    while (i-- > 0) {
+      prop = props[i];
+      if (!merged[prop]) {
+        destObj[prop] = sourceObj[prop];
+        merged[prop] = true;
+      }
+    }
+    sourceObj = Object.getPrototypeOf(sourceObj);
+  } while (sourceObj && (!filter || filter(sourceObj, destObj)) && sourceObj !== Object.prototype);
+
+  return destObj;
+}
+
+/*
+ * determines whether a string ends with the characters of a specified string
+ * @param {String} str
+ * @param {String} searchString
+ * @param {Number} [position= 0]
+ * @returns {boolean}
+ */
+function endsWith(str, searchString, position) {
+  str = String(str);
+  if (position === undefined || position > str.length) {
+    position = str.length;
+  }
+  position -= searchString.length;
+  var lastIndex = str.indexOf(searchString, position);
+  return lastIndex !== -1 && lastIndex === position;
+}
+
+
+/**
+ * Returns new array from array like object
+ * @param {*} [thing]
+ * @returns {Array}
+ */
+function toArray(thing) {
+  if (!thing) return null;
+  var i = thing.length;
+  if (isUndefined(i)) return null;
+  var arr = new Array(i);
+  while (i-- > 0) {
+    arr[i] = thing[i];
+  }
+  return arr;
+}
+
+// eslint-disable-next-line func-names
+var isTypedArray = (function(TypedArray) {
+  // eslint-disable-next-line func-names
+  return function(thing) {
+    return TypedArray && thing instanceof TypedArray;
+  };
+})(typeof Uint8Array !== 'undefined' && Object.getPrototypeOf(Uint8Array));
+
+module.exports = {
+  isArray: isArray,
+  isArrayBuffer: isArrayBuffer,
+  isBuffer: isBuffer,
+  isFormData: isFormData,
+  isArrayBufferView: isArrayBufferView,
+  isString: isString,
+  isNumber: isNumber,
+  isObject: isObject,
+  isPlainObject: isPlainObject,
+  isUndefined: isUndefined,
+  isDate: isDate,
+  isFile: isFile,
+  isBlob: isBlob,
+  isFunction: isFunction,
+  isStream: isStream,
+  isURLSearchParams: isURLSearchParams,
+  isStandardBrowserEnv: isStandardBrowserEnv,
+  forEach: forEach,
+  merge: merge,
+  extend: extend,
+  trim: trim,
+  stripBOM: stripBOM,
+  inherits: inherits,
+  toFlatObject: toFlatObject,
+  kindOf: kindOf,
+  kindOfTest: kindOfTest,
+  endsWith: endsWith,
+  toArray: toArray,
+  isTypedArray: isTypedArray,
+  isFileList: isFileList
+};
+
+
+/***/ }),
+
+/***/ 3645:
+/***/ (function(module) {
+
+"use strict";
 
 
 /*
@@ -109,9 +2482,10 @@ module.exports = function (cssWithMappingToString) {
 
 /***/ }),
 
-/***/ 81:
+/***/ 8081:
 /***/ (function(module) {
 
+"use strict";
 
 
 module.exports = function (i) {
@@ -120,9 +2494,10 @@ module.exports = function (i) {
 
 /***/ }),
 
-/***/ 448:
+/***/ 4448:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 /**
  * @license React
  * react-dom.production.min.js
@@ -135,7 +2510,7 @@ module.exports = function (i) {
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(294),ba=__webpack_require__(840);function p(a){for(var b="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=1;c<arguments.length;c++)b+="&args[]="+encodeURIComponent(arguments[c]);return"Minified React error #"+a+"; visit "+b+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}var da=new Set,ea={};function fa(a,b){ha(a,b);ha(a+"Capture",b)}
+var aa=__webpack_require__(7294),ba=__webpack_require__(3840);function p(a){for(var b="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=1;c<arguments.length;c++)b+="&args[]="+encodeURIComponent(arguments[c]);return"Minified React error #"+a+"; visit "+b+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}var da=new Set,ea={};function fa(a,b){ha(a,b);ha(a+"Capture",b)}
 function ha(a,b){ea[a]=b;for(a=0;a<b.length;a++)da.add(b[a])}
 var ia=!("undefined"===typeof window||"undefined"===typeof window.document||"undefined"===typeof window.document.createElement),ja=Object.prototype.hasOwnProperty,ka=/^[:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD][:A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/,la=
 {},ma={};function na(a){if(ja.call(ma,a))return!0;if(ja.call(la,a))return!1;if(ka.test(a))return ma[a]=!0;la[a]=!0;return!1}function oa(a,b,c,d){if(null!==c&&0===c.type)return!1;switch(typeof b){case "function":case "symbol":return!0;case "boolean":if(d)return!1;if(null!==c)return!c.acceptsBooleans;a=a.toLowerCase().slice(0,5);return"data-"!==a&&"aria-"!==a;default:return!1}}
@@ -452,9 +2827,10 @@ exports.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!nl(c))throw Er
 /***/ 745:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 
-var m = __webpack_require__(935);
+var m = __webpack_require__(3935);
 if (true) {
   exports.createRoot = m.createRoot;
   exports.hydrateRoot = m.hydrateRoot;
@@ -463,9 +2839,10 @@ if (true) {
 
 /***/ }),
 
-/***/ 935:
+/***/ 3935:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
+"use strict";
 
 
 function checkDCE() {
@@ -491,15 +2868,16 @@ if (true) {
   // DCE check should happen before ReactDOM bundle executes so that
   // DevTools can report bad minification during injection.
   checkDCE();
-  module.exports = __webpack_require__(448);
+  module.exports = __webpack_require__(4448);
 } else {}
 
 
 /***/ }),
 
-/***/ 408:
+/***/ 2408:
 /***/ (function(__unused_webpack_module, exports) {
 
+"use strict";
 /**
  * @license React
  * react.production.min.js
@@ -530,14 +2908,776 @@ exports.useTransition=function(){return U.current.useTransition()};exports.versi
 
 /***/ }),
 
-/***/ 294:
+/***/ 7294:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
+"use strict";
 
 
 if (true) {
-  module.exports = __webpack_require__(408);
+  module.exports = __webpack_require__(2408);
 } else {}
+
+
+/***/ }),
+
+/***/ 5666:
+/***/ (function(module) {
+
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime = (function (exports) {
+  "use strict";
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined; // More compressible than void 0.
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function(obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []);
+
+    // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+    return generator;
+  }
+  exports.wrap = wrap;
+
+  // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+  function tryCatch(fn, obj, arg) {
+    try {
+      return { type: "normal", arg: fn.call(obj, arg) };
+    } catch (err) {
+      return { type: "throw", arg: err };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed";
+
+  // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+  var ContinueSentinel = {};
+
+  // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+  function Generator() {}
+  function GeneratorFunction() {}
+  function GeneratorFunctionPrototype() {}
+
+  // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+  var IteratorPrototype = {};
+  define(IteratorPrototype, iteratorSymbol, function () {
+    return this;
+  });
+
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+  if (NativeIteratorPrototype &&
+      NativeIteratorPrototype !== Op &&
+      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype =
+    Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = GeneratorFunctionPrototype;
+  define(Gp, "constructor", GeneratorFunctionPrototype);
+  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
+  GeneratorFunction.displayName = define(
+    GeneratorFunctionPrototype,
+    toStringTagSymbol,
+    "GeneratorFunction"
+  );
+
+  // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function(method) {
+      define(prototype, method, function(arg) {
+        return this._invoke(method, arg);
+      });
+    });
+  }
+
+  exports.isGeneratorFunction = function(genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor
+      ? ctor === GeneratorFunction ||
+        // For the native GeneratorFunction constructor, the best we can
+        // do is to check its .name property.
+        (ctor.displayName || ctor.name) === "GeneratorFunction"
+      : false;
+  };
+
+  exports.mark = function(genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
+    }
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  };
+
+  // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+  exports.awrap = function(arg) {
+    return { __await: arg };
+  };
+
+  function AsyncIterator(generator, PromiseImpl) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+        if (value &&
+            typeof value === "object" &&
+            hasOwn.call(value, "__await")) {
+          return PromiseImpl.resolve(value.__await).then(function(value) {
+            invoke("next", value, resolve, reject);
+          }, function(err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return PromiseImpl.resolve(value).then(function(unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function(error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new PromiseImpl(function(resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise =
+        // If enqueue has been called before, then we want to wait until
+        // all previous Promises have been resolved before calling invoke,
+        // so that results are always delivered in the correct order. If
+        // enqueue has not been called before, then it is important to
+        // call invoke immediately, without waiting on a callback to fire,
+        // so that the async generator function has the opportunity to do
+        // any necessary setup in a predictable way. This predictability
+        // is why the Promise constructor synchronously invokes its
+        // executor callback, and why async functions synchronously
+        // execute code before the first await. Since we implement simple
+        // async functions in terms of async generators, it is especially
+        // important to get this right, even though it requires care.
+        previousPromise ? previousPromise.then(
+          callInvokeWithMethodAndArg,
+          // Avoid propagating failures to Promises returned by later
+          // invocations of the iterator.
+          callInvokeWithMethodAndArg
+        ) : callInvokeWithMethodAndArg();
+    }
+
+    // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
+    return this;
+  });
+  exports.AsyncIterator = AsyncIterator;
+
+  // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+  exports.async = function(innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+
+    var iter = new AsyncIterator(
+      wrap(innerFn, outerFn, self, tryLocsList),
+      PromiseImpl
+    );
+
+    return exports.isGeneratorFunction(outerFn)
+      ? iter // If outerFn is a generator, return the full iterator.
+      : iter.next().then(function(result) {
+          return result.done ? result.value : iter.next();
+        });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        }
+
+        // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+
+        var record = tryCatch(innerFn, self, context);
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done
+            ? GenStateCompleted
+            : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+
+        } else if (record.type === "throw") {
+          state = GenStateCompleted;
+          // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  }
+
+  // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+    if (method === undefined) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError(
+          "The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (! info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value;
+
+      // Resume execution at the desired location (see delegateYield).
+      context.next = delegate.nextLoc;
+
+      // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined;
+      }
+
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    }
+
+    // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+    context.delegate = null;
+    return ContinueSentinel;
+  }
+
+  // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+  defineIteratorMethods(Gp);
+
+  define(Gp, toStringTagSymbol, "Generator");
+
+  // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+  define(Gp, iteratorSymbol, function() {
+    return this;
+  });
+
+  define(Gp, "toString", function() {
+    return "[object Generator]";
+  });
+
+  function pushTryEntry(locs) {
+    var entry = { tryLoc: locs[0] };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{ tryLoc: "root" }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function(object) {
+    var keys = [];
+    for (var key in object) {
+      keys.push(key);
+    }
+    keys.reverse();
+
+    // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      }
+
+      // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1, next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined;
+          next.done = true;
+
+          return next;
+        };
+
+        return next.next = next;
+      }
+    }
+
+    // Return an iterator with no values.
+    return { next: doneResult };
+  }
+  exports.values = values;
+
+  function doneResult() {
+    return { value: undefined, done: true };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+
+    reset: function(skipTempReset) {
+      this.prev = 0;
+      this.next = 0;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
+      this.done = false;
+      this.delegate = null;
+
+      this.method = "next";
+      this.arg = undefined;
+
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" &&
+              hasOwn.call(this, name) &&
+              !isNaN(+name.slice(1))) {
+            this[name] = undefined;
+          }
+        }
+      }
+    },
+
+    stop: function() {
+      this.done = true;
+
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+
+    dispatchException: function(exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined;
+        }
+
+        return !! caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+
+    abrupt: function(type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc <= this.prev &&
+            hasOwn.call(entry, "finallyLoc") &&
+            this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry &&
+          (type === "break" ||
+           type === "continue") &&
+          finallyEntry.tryLoc <= arg &&
+          arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+
+    complete: function(record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" ||
+          record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+
+    finish: function(finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+
+    "catch": function(tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+          return thrown;
+        }
+      }
+
+      // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+      throw new Error("illegal catch attempt");
+    },
+
+    delegateYield: function(iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined;
+      }
+
+      return ContinueSentinel;
+    }
+  };
+
+  // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+  return exports;
+
+}(
+  // If this script is executing as a CommonJS module, use module.exports
+  // as the regeneratorRuntime namespace. Otherwise create a new empty
+  // object. Either way, the resulting object will be used to initialize
+  // the regeneratorRuntime variable at the top of this file.
+   true ? module.exports : 0
+));
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, in modern engines
+  // we can explicitly access globalThis. In older engines we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  if (typeof globalThis === "object") {
+    globalThis.regeneratorRuntime = runtime;
+  } else {
+    Function("r", "regeneratorRuntime = r")(runtime);
+  }
+}
 
 
 /***/ }),
@@ -545,6 +3685,7 @@ if (true) {
 /***/ 53:
 /***/ (function(__unused_webpack_module, exports) {
 
+"use strict";
 /**
  * @license React
  * scheduler.production.min.js
@@ -568,9 +3709,10 @@ exports.unstable_shouldYield=M;exports.unstable_wrapCallback=function(a){var b=y
 
 /***/ }),
 
-/***/ 840:
+/***/ 3840:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
+"use strict";
 
 
 if (true) {
@@ -580,9 +3722,10 @@ if (true) {
 
 /***/ }),
 
-/***/ 379:
+/***/ 3379:
 /***/ (function(module) {
 
+"use strict";
 
 
 var stylesInDOM = [];
@@ -693,6 +3836,7 @@ module.exports = function (list, options) {
 /***/ 569:
 /***/ (function(module) {
 
+"use strict";
 
 
 var memo = {};
@@ -735,9 +3879,10 @@ module.exports = insertBySelector;
 
 /***/ }),
 
-/***/ 216:
+/***/ 9216:
 /***/ (function(module) {
 
+"use strict";
 
 
 /* istanbul ignore next  */
@@ -752,9 +3897,10 @@ module.exports = insertStyleElement;
 
 /***/ }),
 
-/***/ 565:
+/***/ 3565:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
+"use strict";
 
 
 /* istanbul ignore next  */
@@ -770,9 +3916,10 @@ module.exports = setAttributesWithoutAttributes;
 
 /***/ }),
 
-/***/ 795:
+/***/ 7795:
 /***/ (function(module) {
 
+"use strict";
 
 
 /* istanbul ignore next  */
@@ -846,9 +3993,10 @@ module.exports = domAPI;
 
 /***/ }),
 
-/***/ 589:
+/***/ 4589:
 /***/ (function(module) {
 
+"use strict";
 
 
 /* istanbul ignore next  */
@@ -868,97 +4016,203 @@ module.exports = styleTagTransform;
 
 /***/ }),
 
-/***/ 289:
+/***/ 5861:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ _asyncToGenerator; }
+/* harmony export */ });
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+/***/ }),
+
+/***/ 4942:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ _defineProperty; }
+/* harmony export */ });
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+/***/ }),
+
+/***/ 8152:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "CompactEncrypt": function() { return /* reexport */ CompactEncrypt; },
-  "CompactSign": function() { return /* reexport */ CompactSign; },
-  "EmbeddedJWK": function() { return /* reexport */ EmbeddedJWK; },
-  "EncryptJWT": function() { return /* reexport */ EncryptJWT; },
-  "FlattenedEncrypt": function() { return /* reexport */ FlattenedEncrypt; },
-  "FlattenedSign": function() { return /* reexport */ FlattenedSign; },
-  "GeneralEncrypt": function() { return /* reexport */ GeneralEncrypt; },
-  "GeneralSign": function() { return /* reexport */ GeneralSign; },
-  "SignJWT": function() { return /* reexport */ SignJWT; },
-  "UnsecuredJWT": function() { return /* reexport */ UnsecuredJWT; },
-  "base64url": function() { return /* reexport */ util_base64url_namespaceObject; },
-  "calculateJwkThumbprint": function() { return /* reexport */ calculateJwkThumbprint; },
-  "compactDecrypt": function() { return /* reexport */ compactDecrypt; },
-  "compactVerify": function() { return /* reexport */ compactVerify; },
-  "createLocalJWKSet": function() { return /* reexport */ createLocalJWKSet; },
-  "createRemoteJWKSet": function() { return /* reexport */ createRemoteJWKSet; },
-  "decodeJwt": function() { return /* reexport */ decodeJwt; },
-  "decodeProtectedHeader": function() { return /* reexport */ decodeProtectedHeader; },
-  "errors": function() { return /* reexport */ errors_namespaceObject; },
-  "exportJWK": function() { return /* reexport */ exportJWK; },
-  "exportPKCS8": function() { return /* reexport */ exportPKCS8; },
-  "exportSPKI": function() { return /* reexport */ exportSPKI; },
-  "flattenedDecrypt": function() { return /* reexport */ flattenedDecrypt; },
-  "flattenedVerify": function() { return /* reexport */ flattenedVerify; },
-  "generalDecrypt": function() { return /* reexport */ generalDecrypt; },
-  "generalVerify": function() { return /* reexport */ generalVerify; },
-  "generateKeyPair": function() { return /* reexport */ generate_key_pair_generateKeyPair; },
-  "generateSecret": function() { return /* reexport */ generate_secret_generateSecret; },
-  "importJWK": function() { return /* reexport */ importJWK; },
-  "importPKCS8": function() { return /* reexport */ importPKCS8; },
-  "importSPKI": function() { return /* reexport */ importSPKI; },
-  "importX509": function() { return /* reexport */ importX509; },
-  "jwtDecrypt": function() { return /* reexport */ jwtDecrypt; },
-  "jwtVerify": function() { return /* reexport */ jwtVerify; }
+  "Z": function() { return /* binding */ _slicedToArray; }
 });
 
-// NAMESPACE OBJECT: ./node_modules/jose/dist/browser/util/errors.js
-var errors_namespaceObject = {};
-__webpack_require__.r(errors_namespaceObject);
-__webpack_require__.d(errors_namespaceObject, {
-  "JOSEAlgNotAllowed": function() { return JOSEAlgNotAllowed; },
-  "JOSEError": function() { return JOSEError; },
-  "JOSENotSupported": function() { return JOSENotSupported; },
-  "JWEDecryptionFailed": function() { return JWEDecryptionFailed; },
-  "JWEInvalid": function() { return JWEInvalid; },
-  "JWKInvalid": function() { return JWKInvalid; },
-  "JWKSInvalid": function() { return JWKSInvalid; },
-  "JWKSMultipleMatchingKeys": function() { return JWKSMultipleMatchingKeys; },
-  "JWKSNoMatchingKey": function() { return JWKSNoMatchingKey; },
-  "JWKSTimeout": function() { return JWKSTimeout; },
-  "JWSInvalid": function() { return JWSInvalid; },
-  "JWSSignatureVerificationFailed": function() { return JWSSignatureVerificationFailed; },
-  "JWTClaimValidationFailed": function() { return JWTClaimValidationFailed; },
-  "JWTExpired": function() { return JWTExpired; },
-  "JWTInvalid": function() { return JWTInvalid; }
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayWithHoles.js
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/iterableToArrayLimit.js
+function _iterableToArrayLimit(arr, i) {
+  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+
+  if (_i == null) return;
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+
+  var _s, _e;
+
+  try {
+    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) {
+    arr2[i] = arr[i];
+  }
+
+  return arr2;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/nonIterableRest.js
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/slicedToArray.js
+
+
+
+
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+
+/***/ }),
+
+/***/ 1002:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ _typeof; }
+/* harmony export */ });
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  }, _typeof(obj);
+}
+
+/***/ }),
+
+/***/ 8526:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "t5": function() { return /* reexport */ decodeJwt; }
 });
 
-// NAMESPACE OBJECT: ./node_modules/jose/dist/browser/util/base64url.js
-var util_base64url_namespaceObject = {};
-__webpack_require__.r(util_base64url_namespaceObject);
-__webpack_require__.d(util_base64url_namespaceObject, {
-  "decode": function() { return base64url_decode; },
-  "encode": function() { return base64url_encode; }
-});
+// UNUSED EXPORTS: CompactEncrypt, CompactSign, EmbeddedJWK, EncryptJWT, FlattenedEncrypt, FlattenedSign, GeneralEncrypt, GeneralSign, SignJWT, UnsecuredJWT, base64url, calculateJwkThumbprint, compactDecrypt, compactVerify, createLocalJWKSet, createRemoteJWKSet, decodeProtectedHeader, errors, exportJWK, exportPKCS8, exportSPKI, flattenedDecrypt, flattenedVerify, generalDecrypt, generalVerify, generateKeyPair, generateSecret, importJWK, importPKCS8, importSPKI, importX509, jwtDecrypt, jwtVerify
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/webcrypto.js
 /* harmony default export */ var webcrypto = (crypto);
-const isCryptoKey = (key) => key instanceof CryptoKey;
+const webcrypto_isCryptoKey = (key) => key instanceof CryptoKey;
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/digest.js
 
-const digest = async (algorithm, data) => {
+const digest_digest = async (algorithm, data) => {
     const subtleDigest = `SHA-${algorithm.slice(-3)}`;
-    return new Uint8Array(await webcrypto.subtle.digest(subtleDigest, data));
+    return new Uint8Array(await crypto.subtle.digest(subtleDigest, data));
 };
-/* harmony default export */ var runtime_digest = (digest);
+/* harmony default export */ var runtime_digest = ((/* unused pure expression or super */ null && (digest_digest)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/buffer_utils.js
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-const MAX_INT32 = 2 ** 32;
-function concat(...buffers) {
+const buffer_utils_encoder = new TextEncoder();
+const buffer_utils_decoder = new TextDecoder();
+const MAX_INT32 = (/* unused pure expression or super */ null && (2 ** 32));
+function buffer_utils_concat(...buffers) {
     const size = buffers.reduce((acc, { length }) => acc + length, 0);
     const buf = new Uint8Array(size);
     let i = 0;
@@ -968,8 +4222,8 @@ function concat(...buffers) {
     });
     return buf;
 }
-function buffer_utils_p2s(alg, p2sInput) {
-    return concat(encoder.encode(alg), new Uint8Array([0]), p2sInput);
+function p2s(alg, p2sInput) {
+    return buffer_utils_concat(buffer_utils_encoder.encode(alg), new Uint8Array([0]), p2sInput);
 }
 function writeUInt32BE(buf, value, offset) {
     if (value < 0 || value >= MAX_INT32) {
@@ -977,7 +4231,7 @@ function writeUInt32BE(buf, value, offset) {
     }
     buf.set([value >>> 24, value >>> 16, value >>> 8, value & 0xff], offset);
 }
-function uint64be(value) {
+function buffer_utils_uint64be(value) {
     const high = Math.floor(value / MAX_INT32);
     const low = value % MAX_INT32;
     const buf = new Uint8Array(8);
@@ -985,33 +4239,33 @@ function uint64be(value) {
     writeUInt32BE(buf, low, 4);
     return buf;
 }
-function uint32be(value) {
+function buffer_utils_uint32be(value) {
     const buf = new Uint8Array(4);
     writeUInt32BE(buf, value);
     return buf;
 }
-function lengthAndInput(input) {
-    return concat(uint32be(input.length), input);
+function buffer_utils_lengthAndInput(input) {
+    return buffer_utils_concat(buffer_utils_uint32be(input.length), input);
 }
-async function concatKdf(secret, bits, value) {
+async function buffer_utils_concatKdf(secret, bits, value) {
     const iterations = Math.ceil((bits >> 3) / 32);
     const res = new Uint8Array(iterations * 32);
     for (let iter = 0; iter < iterations; iter++) {
         const buf = new Uint8Array(4 + secret.length + value.length);
-        buf.set(uint32be(iter + 1));
+        buf.set(buffer_utils_uint32be(iter + 1));
         buf.set(secret, 4);
         buf.set(value, 4 + secret.length);
-        res.set(await runtime_digest('sha256', buf), iter * 32);
+        res.set(await digest('sha256', buf), iter * 32);
     }
     return res.slice(0, bits >> 3);
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/base64url.js
 
-const encodeBase64 = (input) => {
+const base64url_encodeBase64 = (input) => {
     let unencoded = input;
     if (typeof unencoded === 'string') {
-        unencoded = encoder.encode(unencoded);
+        unencoded = buffer_utils_encoder.encode(unencoded);
     }
     const CHUNK_SIZE = 0x8000;
     const arr = [];
@@ -1021,9 +4275,9 @@ const encodeBase64 = (input) => {
     return btoa(arr.join(''));
 };
 const encode = (input) => {
-    return encodeBase64(input).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    return base64url_encodeBase64(input).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 };
-const decodeBase64 = (encoded) => {
+const base64url_decodeBase64 = (encoded) => {
     const binary = atob(encoded);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
@@ -1034,11 +4288,11 @@ const decodeBase64 = (encoded) => {
 const decode = (input) => {
     let encoded = input;
     if (encoded instanceof Uint8Array) {
-        encoded = decoder.decode(encoded);
+        encoded = buffer_utils_decoder.decode(encoded);
     }
     encoded = encoded.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '');
     try {
-        return decodeBase64(encoded);
+        return base64url_decodeBase64(encoded);
     }
     catch (_a) {
         throw new TypeError('The input to be decoded is not correctly encoded.');
@@ -1046,7 +4300,7 @@ const decode = (input) => {
 };
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/util/errors.js
-class JOSEError extends Error {
+class errors_JOSEError extends Error {
     constructor(message) {
         var _a;
         super(message);
@@ -1058,7 +4312,7 @@ class JOSEError extends Error {
         return 'ERR_JOSE_GENERIC';
     }
 }
-class JWTClaimValidationFailed extends JOSEError {
+class errors_JWTClaimValidationFailed extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor(message, claim = 'unspecified', reason = 'unspecified') {
         super(message);
         this.code = 'ERR_JWT_CLAIM_VALIDATION_FAILED';
@@ -1069,7 +4323,7 @@ class JWTClaimValidationFailed extends JOSEError {
         return 'ERR_JWT_CLAIM_VALIDATION_FAILED';
     }
 }
-class JWTExpired extends JOSEError {
+class errors_JWTExpired extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor(message, claim = 'unspecified', reason = 'unspecified') {
         super(message);
         this.code = 'ERR_JWT_EXPIRED';
@@ -1080,7 +4334,7 @@ class JWTExpired extends JOSEError {
         return 'ERR_JWT_EXPIRED';
     }
 }
-class JOSEAlgNotAllowed extends JOSEError {
+class errors_JOSEAlgNotAllowed extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JOSE_ALG_NOT_ALLOWED';
@@ -1089,7 +4343,7 @@ class JOSEAlgNotAllowed extends JOSEError {
         return 'ERR_JOSE_ALG_NOT_ALLOWED';
     }
 }
-class JOSENotSupported extends JOSEError {
+class errors_JOSENotSupported extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JOSE_NOT_SUPPORTED';
@@ -1098,7 +4352,7 @@ class JOSENotSupported extends JOSEError {
         return 'ERR_JOSE_NOT_SUPPORTED';
     }
 }
-class JWEDecryptionFailed extends JOSEError {
+class errors_JWEDecryptionFailed extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWE_DECRYPTION_FAILED';
@@ -1108,7 +4362,7 @@ class JWEDecryptionFailed extends JOSEError {
         return 'ERR_JWE_DECRYPTION_FAILED';
     }
 }
-class JWEInvalid extends JOSEError {
+class errors_JWEInvalid extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWE_INVALID';
@@ -1117,7 +4371,7 @@ class JWEInvalid extends JOSEError {
         return 'ERR_JWE_INVALID';
     }
 }
-class JWSInvalid extends JOSEError {
+class errors_JWSInvalid extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWS_INVALID';
@@ -1126,7 +4380,7 @@ class JWSInvalid extends JOSEError {
         return 'ERR_JWS_INVALID';
     }
 }
-class JWTInvalid extends JOSEError {
+class errors_JWTInvalid extends errors_JOSEError {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWT_INVALID';
@@ -1135,7 +4389,7 @@ class JWTInvalid extends JOSEError {
         return 'ERR_JWT_INVALID';
     }
 }
-class JWKInvalid extends JOSEError {
+class errors_JWKInvalid extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWK_INVALID';
@@ -1144,7 +4398,7 @@ class JWKInvalid extends JOSEError {
         return 'ERR_JWK_INVALID';
     }
 }
-class JWKSInvalid extends JOSEError {
+class errors_JWKSInvalid extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWKS_INVALID';
@@ -1153,7 +4407,7 @@ class JWKSInvalid extends JOSEError {
         return 'ERR_JWKS_INVALID';
     }
 }
-class JWKSNoMatchingKey extends JOSEError {
+class errors_JWKSNoMatchingKey extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWKS_NO_MATCHING_KEY';
@@ -1163,7 +4417,7 @@ class JWKSNoMatchingKey extends JOSEError {
         return 'ERR_JWKS_NO_MATCHING_KEY';
     }
 }
-class JWKSMultipleMatchingKeys extends JOSEError {
+class errors_JWKSMultipleMatchingKeys extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWKS_MULTIPLE_MATCHING_KEYS';
@@ -1173,7 +4427,7 @@ class JWKSMultipleMatchingKeys extends JOSEError {
         return 'ERR_JWKS_MULTIPLE_MATCHING_KEYS';
     }
 }
-class JWKSTimeout extends JOSEError {
+class errors_JWKSTimeout extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWKS_TIMEOUT';
@@ -1183,7 +4437,7 @@ class JWKSTimeout extends JOSEError {
         return 'ERR_JWKS_TIMEOUT';
     }
 }
-class JWSSignatureVerificationFailed extends JOSEError {
+class errors_JWSSignatureVerificationFailed extends (/* unused pure expression or super */ null && (errors_JOSEError)) {
     constructor() {
         super(...arguments);
         this.code = 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED';
@@ -1196,12 +4450,12 @@ class JWSSignatureVerificationFailed extends JOSEError {
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/random.js
 
-/* harmony default export */ var random = (webcrypto.getRandomValues.bind(webcrypto));
+/* harmony default export */ var runtime_random = (webcrypto.getRandomValues.bind(webcrypto));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/iv.js
 
 
-function bitLength(alg) {
+function iv_bitLength(alg) {
     switch (alg) {
         case 'A128GCM':
         case 'A128GCMKW':
@@ -1218,246 +4472,33 @@ function bitLength(alg) {
             throw new JOSENotSupported(`Unsupported JWE Algorithm: ${alg}`);
     }
 }
-/* harmony default export */ var lib_iv = ((alg) => random(new Uint8Array(bitLength(alg) >> 3)));
+/* harmony default export */ var iv = ((alg) => random(new Uint8Array(iv_bitLength(alg) >> 3)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/check_iv_length.js
 
 
-const checkIvLength = (enc, iv) => {
+const check_iv_length_checkIvLength = (enc, iv) => {
     if (iv.length << 3 !== bitLength(enc)) {
         throw new JWEInvalid('Invalid Initialization Vector length');
     }
 };
-/* harmony default export */ var check_iv_length = (checkIvLength);
+/* harmony default export */ var check_iv_length = ((/* unused pure expression or super */ null && (check_iv_length_checkIvLength)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/check_cek_length.js
 
-const checkCekLength = (cek, expected) => {
+const check_cek_length_checkCekLength = (cek, expected) => {
     if (cek.length << 3 !== expected) {
         throw new JWEInvalid('Invalid Content Encryption Key length');
     }
 };
-/* harmony default export */ var check_cek_length = (checkCekLength);
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/timing_safe_equal.js
-const timingSafeEqual = (a, b) => {
-    if (!(a instanceof Uint8Array)) {
-        throw new TypeError('First argument must be a buffer');
-    }
-    if (!(b instanceof Uint8Array)) {
-        throw new TypeError('Second argument must be a buffer');
-    }
-    if (a.length !== b.length) {
-        throw new TypeError('Input buffers must have the same length');
-    }
-    const len = a.length;
-    let out = 0;
-    let i = -1;
-    while (++i < len) {
-        out |= a[i] ^ b[i];
-    }
-    return out === 0;
-};
-/* harmony default export */ var timing_safe_equal = (timingSafeEqual);
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/env.js
-function isCloudflareWorkers() {
-    return typeof WebSocketPair === 'function';
-}
-function isNodeJs() {
-    try {
-        return process.versions.node !== undefined;
-    }
-    catch (_a) {
-        return false;
-    }
-}
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/crypto_key.js
-
-function unusable(name, prop = 'algorithm.name') {
-    return new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`);
-}
-function isAlgorithm(algorithm, name) {
-    return algorithm.name === name;
-}
-function getHashLength(hash) {
-    return parseInt(hash.name.slice(4), 10);
-}
-function getNamedCurve(alg) {
-    switch (alg) {
-        case 'ES256':
-            return 'P-256';
-        case 'ES384':
-            return 'P-384';
-        case 'ES512':
-            return 'P-521';
-        default:
-            throw new Error('unreachable');
-    }
-}
-function checkUsage(key, usages) {
-    if (usages.length && !usages.some((expected) => key.usages.includes(expected))) {
-        let msg = 'CryptoKey does not support this operation, its usages must include ';
-        if (usages.length > 2) {
-            const last = usages.pop();
-            msg += `one of ${usages.join(', ')}, or ${last}.`;
-        }
-        else if (usages.length === 2) {
-            msg += `one of ${usages[0]} or ${usages[1]}.`;
-        }
-        else {
-            msg += `${usages[0]}.`;
-        }
-        throw new TypeError(msg);
-    }
-}
-function checkSigCryptoKey(key, alg, ...usages) {
-    switch (alg) {
-        case 'HS256':
-        case 'HS384':
-        case 'HS512': {
-            if (!isAlgorithm(key.algorithm, 'HMAC'))
-                throw unusable('HMAC');
-            const expected = parseInt(alg.slice(2), 10);
-            const actual = getHashLength(key.algorithm.hash);
-            if (actual !== expected)
-                throw unusable(`SHA-${expected}`, 'algorithm.hash');
-            break;
-        }
-        case 'RS256':
-        case 'RS384':
-        case 'RS512': {
-            if (!isAlgorithm(key.algorithm, 'RSASSA-PKCS1-v1_5'))
-                throw unusable('RSASSA-PKCS1-v1_5');
-            const expected = parseInt(alg.slice(2), 10);
-            const actual = getHashLength(key.algorithm.hash);
-            if (actual !== expected)
-                throw unusable(`SHA-${expected}`, 'algorithm.hash');
-            break;
-        }
-        case 'PS256':
-        case 'PS384':
-        case 'PS512': {
-            if (!isAlgorithm(key.algorithm, 'RSA-PSS'))
-                throw unusable('RSA-PSS');
-            const expected = parseInt(alg.slice(2), 10);
-            const actual = getHashLength(key.algorithm.hash);
-            if (actual !== expected)
-                throw unusable(`SHA-${expected}`, 'algorithm.hash');
-            break;
-        }
-        case isNodeJs() && 'EdDSA': {
-            if (key.algorithm.name !== 'NODE-ED25519' && key.algorithm.name !== 'NODE-ED448')
-                throw unusable('NODE-ED25519 or NODE-ED448');
-            break;
-        }
-        case isCloudflareWorkers() && 'EdDSA': {
-            if (!isAlgorithm(key.algorithm, 'NODE-ED25519'))
-                throw unusable('NODE-ED25519');
-            break;
-        }
-        case 'ES256':
-        case 'ES384':
-        case 'ES512': {
-            if (!isAlgorithm(key.algorithm, 'ECDSA'))
-                throw unusable('ECDSA');
-            const expected = getNamedCurve(alg);
-            const actual = key.algorithm.namedCurve;
-            if (actual !== expected)
-                throw unusable(expected, 'algorithm.namedCurve');
-            break;
-        }
-        default:
-            throw new TypeError('CryptoKey does not support this operation');
-    }
-    checkUsage(key, usages);
-}
-function checkEncCryptoKey(key, alg, ...usages) {
-    switch (alg) {
-        case 'A128GCM':
-        case 'A192GCM':
-        case 'A256GCM': {
-            if (!isAlgorithm(key.algorithm, 'AES-GCM'))
-                throw unusable('AES-GCM');
-            const expected = parseInt(alg.slice(1, 4), 10);
-            const actual = key.algorithm.length;
-            if (actual !== expected)
-                throw unusable(expected, 'algorithm.length');
-            break;
-        }
-        case 'A128KW':
-        case 'A192KW':
-        case 'A256KW': {
-            if (!isAlgorithm(key.algorithm, 'AES-KW'))
-                throw unusable('AES-KW');
-            const expected = parseInt(alg.slice(1, 4), 10);
-            const actual = key.algorithm.length;
-            if (actual !== expected)
-                throw unusable(expected, 'algorithm.length');
-            break;
-        }
-        case 'ECDH':
-            if (!isAlgorithm(key.algorithm, 'ECDH'))
-                throw unusable('ECDH');
-            break;
-        case 'PBES2-HS256+A128KW':
-        case 'PBES2-HS384+A192KW':
-        case 'PBES2-HS512+A256KW':
-            if (!isAlgorithm(key.algorithm, 'PBKDF2'))
-                throw unusable('PBKDF2');
-            break;
-        case 'RSA-OAEP':
-        case 'RSA-OAEP-256':
-        case 'RSA-OAEP-384':
-        case 'RSA-OAEP-512': {
-            if (!isAlgorithm(key.algorithm, 'RSA-OAEP'))
-                throw unusable('RSA-OAEP');
-            const expected = parseInt(alg.slice(9), 10) || 1;
-            const actual = getHashLength(key.algorithm.hash);
-            if (actual !== expected)
-                throw unusable(`SHA-${expected}`, 'algorithm.hash');
-            break;
-        }
-        default:
-            throw new TypeError('CryptoKey does not support this operation');
-    }
-    checkUsage(key, usages);
-}
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/invalid_key_input.js
-/* harmony default export */ var invalid_key_input = ((actual, ...types) => {
-    let msg = 'Key must be ';
-    if (types.length > 2) {
-        const last = types.pop();
-        msg += `one of type ${types.join(', ')}, or ${last}.`;
-    }
-    else if (types.length === 2) {
-        msg += `one of type ${types[0]} or ${types[1]}.`;
-    }
-    else {
-        msg += `of type ${types[0]}.`;
-    }
-    if (actual == null) {
-        msg += ` Received ${actual}`;
-    }
-    else if (typeof actual === 'function' && actual.name) {
-        msg += ` Received function ${actual.name}`;
-    }
-    else if (typeof actual === 'object' && actual != null) {
-        if (actual.constructor && actual.constructor.name) {
-            msg += ` Received an instance of ${actual.constructor.name}`;
-        }
-    }
-    return msg;
-});
+/* harmony default export */ var check_cek_length = ((/* unused pure expression or super */ null && (check_cek_length_checkCekLength)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/is_key_like.js
 
 /* harmony default export */ var is_key_like = ((key) => {
     return isCryptoKey(key);
 });
-const types = ['CryptoKey'];
+const is_key_like_types = (/* unused pure expression or super */ null && (['CryptoKey']));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/decrypt.js
 
@@ -1471,19 +4512,19 @@ const types = ['CryptoKey'];
 
 async function cbcDecrypt(enc, cek, ciphertext, iv, tag, aad) {
     if (!(cek instanceof Uint8Array)) {
-        throw new TypeError(invalid_key_input(cek, 'Uint8Array'));
+        throw new TypeError(invalidKeyInput(cek, 'Uint8Array'));
     }
     const keySize = parseInt(enc.slice(1, 4), 10);
-    const encKey = await webcrypto.subtle.importKey('raw', cek.subarray(keySize >> 3), 'AES-CBC', false, ['decrypt']);
-    const macKey = await webcrypto.subtle.importKey('raw', cek.subarray(0, keySize >> 3), {
+    const encKey = await crypto.subtle.importKey('raw', cek.subarray(keySize >> 3), 'AES-CBC', false, ['decrypt']);
+    const macKey = await crypto.subtle.importKey('raw', cek.subarray(0, keySize >> 3), {
         hash: `SHA-${keySize << 1}`,
         name: 'HMAC',
     }, false, ['sign']);
     const macData = concat(aad, iv, ciphertext, uint64be(aad.length << 3));
-    const expectedTag = new Uint8Array((await webcrypto.subtle.sign('HMAC', macKey, macData)).slice(0, keySize >> 3));
+    const expectedTag = new Uint8Array((await crypto.subtle.sign('HMAC', macKey, macData)).slice(0, keySize >> 3));
     let macCheckPassed;
     try {
-        macCheckPassed = timing_safe_equal(tag, expectedTag);
+        macCheckPassed = timingSafeEqual(tag, expectedTag);
     }
     catch (_a) {
     }
@@ -1492,7 +4533,7 @@ async function cbcDecrypt(enc, cek, ciphertext, iv, tag, aad) {
     }
     let plaintext;
     try {
-        plaintext = new Uint8Array(await webcrypto.subtle.decrypt({ iv, name: 'AES-CBC' }, encKey, ciphertext));
+        plaintext = new Uint8Array(await crypto.subtle.decrypt({ iv, name: 'AES-CBC' }, encKey, ciphertext));
     }
     catch (_b) {
     }
@@ -1504,14 +4545,14 @@ async function cbcDecrypt(enc, cek, ciphertext, iv, tag, aad) {
 async function gcmDecrypt(enc, cek, ciphertext, iv, tag, aad) {
     let encKey;
     if (cek instanceof Uint8Array) {
-        encKey = await webcrypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['decrypt']);
+        encKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['decrypt']);
     }
     else {
         checkEncCryptoKey(cek, enc, 'decrypt');
         encKey = cek;
     }
     try {
-        return new Uint8Array(await webcrypto.subtle.decrypt({
+        return new Uint8Array(await crypto.subtle.decrypt({
             additionalData: aad,
             iv,
             name: 'AES-GCM',
@@ -1522,88 +4563,46 @@ async function gcmDecrypt(enc, cek, ciphertext, iv, tag, aad) {
         throw new JWEDecryptionFailed();
     }
 }
-const decrypt = async (enc, cek, ciphertext, iv, tag, aad) => {
+const decrypt_decrypt = async (enc, cek, ciphertext, iv, tag, aad) => {
     if (!isCryptoKey(cek) && !(cek instanceof Uint8Array)) {
-        throw new TypeError(invalid_key_input(cek, ...types, 'Uint8Array'));
+        throw new TypeError(invalidKeyInput(cek, ...types, 'Uint8Array'));
     }
-    check_iv_length(enc, iv);
+    checkIvLength(enc, iv);
     switch (enc) {
         case 'A128CBC-HS256':
         case 'A192CBC-HS384':
         case 'A256CBC-HS512':
             if (cek instanceof Uint8Array)
-                check_cek_length(cek, parseInt(enc.slice(-3), 10));
+                checkCekLength(cek, parseInt(enc.slice(-3), 10));
             return cbcDecrypt(enc, cek, ciphertext, iv, tag, aad);
         case 'A128GCM':
         case 'A192GCM':
         case 'A256GCM':
             if (cek instanceof Uint8Array)
-                check_cek_length(cek, parseInt(enc.slice(1, 4), 10));
+                checkCekLength(cek, parseInt(enc.slice(1, 4), 10));
             return gcmDecrypt(enc, cek, ciphertext, iv, tag, aad);
         default:
             throw new JOSENotSupported('Unsupported JWE Content Encryption Algorithm');
     }
 };
-/* harmony default export */ var runtime_decrypt = (decrypt);
+/* harmony default export */ var runtime_decrypt = ((/* unused pure expression or super */ null && (decrypt_decrypt)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/zlib.js
 
-const inflate = async () => {
+const zlib_inflate = async () => {
     throw new JOSENotSupported('JWE "zip" (Compression Algorithm) Header Parameter is not supported by your javascript runtime. You need to use the `inflateRaw` decrypt option to provide Inflate Raw implementation.');
 };
-const deflate = async () => {
+const zlib_deflate = async () => {
     throw new JOSENotSupported('JWE "zip" (Compression Algorithm) Header Parameter is not supported by your javascript runtime. You need to use the `deflateRaw` encrypt option to provide Deflate Raw implementation.');
 };
 
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/is_disjoint.js
-const isDisjoint = (...headers) => {
-    const sources = headers.filter(Boolean);
-    if (sources.length === 0 || sources.length === 1) {
-        return true;
-    }
-    let acc;
-    for (const header of sources) {
-        const parameters = Object.keys(header);
-        if (!acc || acc.size === 0) {
-            acc = new Set(parameters);
-            continue;
-        }
-        for (const parameter of parameters) {
-            if (acc.has(parameter)) {
-                return false;
-            }
-            acc.add(parameter);
-        }
-    }
-    return true;
-};
-/* harmony default export */ var is_disjoint = (isDisjoint);
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/is_object.js
-function isObjectLike(value) {
-    return typeof value === 'object' && value !== null;
-}
-function isObject(input) {
-    if (!isObjectLike(input) || Object.prototype.toString.call(input) !== '[object Object]') {
-        return false;
-    }
-    if (Object.getPrototypeOf(input) === null) {
-        return true;
-    }
-    let proto = input;
-    while (Object.getPrototypeOf(proto) !== null) {
-        proto = Object.getPrototypeOf(proto);
-    }
-    return Object.getPrototypeOf(input) === proto;
-}
-
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/bogus.js
-const bogusWebCrypto = [
+const bogus_bogusWebCrypto = [
     { hash: 'SHA-256', name: 'HMAC' },
     true,
     ['sign'],
 ];
-/* harmony default export */ var bogus = (bogusWebCrypto);
+/* harmony default export */ var bogus = ((/* unused pure expression or super */ null && (bogus_bogusWebCrypto)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/aeskw.js
 
@@ -1622,21 +4621,21 @@ function getCryptoKey(key, alg, usage) {
         return key;
     }
     if (key instanceof Uint8Array) {
-        return webcrypto.subtle.importKey('raw', key, 'AES-KW', true, [usage]);
+        return crypto.subtle.importKey('raw', key, 'AES-KW', true, [usage]);
     }
-    throw new TypeError(invalid_key_input(key, ...types, 'Uint8Array'));
+    throw new TypeError(invalidKeyInput(key, ...types, 'Uint8Array'));
 }
-const wrap = async (alg, key, cek) => {
+const aeskw_wrap = async (alg, key, cek) => {
     const cryptoKey = await getCryptoKey(key, alg, 'wrapKey');
     checkKeySize(cryptoKey, alg);
-    const cryptoKeyCek = await webcrypto.subtle.importKey('raw', cek, ...bogus);
-    return new Uint8Array(await webcrypto.subtle.wrapKey('raw', cryptoKeyCek, cryptoKey, 'AES-KW'));
+    const cryptoKeyCek = await crypto.subtle.importKey('raw', cek, ...bogusWebCrypto);
+    return new Uint8Array(await crypto.subtle.wrapKey('raw', cryptoKeyCek, cryptoKey, 'AES-KW'));
 };
-const unwrap = async (alg, key, encryptedKey) => {
+const aeskw_unwrap = async (alg, key, encryptedKey) => {
     const cryptoKey = await getCryptoKey(key, alg, 'unwrapKey');
     checkKeySize(cryptoKey, alg);
-    const cryptoKeyCek = await webcrypto.subtle.unwrapKey('raw', encryptedKey, cryptoKey, 'AES-KW', ...bogus);
-    return new Uint8Array(await webcrypto.subtle.exportKey('raw', cryptoKeyCek));
+    const cryptoKeyCek = await crypto.subtle.unwrapKey('raw', encryptedKey, cryptoKey, 'AES-KW', ...bogusWebCrypto);
+    return new Uint8Array(await crypto.subtle.exportKey('raw', cryptoKeyCek));
 };
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/ecdhes.js
@@ -1647,15 +4646,15 @@ const unwrap = async (alg, key, encryptedKey) => {
 
 async function deriveKey(publicKey, privateKey, algorithm, keyLength, apu = new Uint8Array(0), apv = new Uint8Array(0)) {
     if (!isCryptoKey(publicKey)) {
-        throw new TypeError(invalid_key_input(publicKey, ...types));
+        throw new TypeError(invalidKeyInput(publicKey, ...types));
     }
     checkEncCryptoKey(publicKey, 'ECDH');
     if (!isCryptoKey(privateKey)) {
-        throw new TypeError(invalid_key_input(privateKey, ...types));
+        throw new TypeError(invalidKeyInput(privateKey, ...types));
     }
     checkEncCryptoKey(privateKey, 'ECDH', 'deriveBits');
     const value = concat(lengthAndInput(encoder.encode(algorithm)), lengthAndInput(apu), lengthAndInput(apv), uint32be(keyLength));
-    const sharedSecret = new Uint8Array(await webcrypto.subtle.deriveBits({
+    const sharedSecret = new Uint8Array(await crypto.subtle.deriveBits({
         name: 'ECDH',
         public: publicKey,
     }, privateKey, Math.ceil(parseInt(privateKey.algorithm.namedCurve.slice(-3), 10) / 8) << 3));
@@ -1663,20 +4662,20 @@ async function deriveKey(publicKey, privateKey, algorithm, keyLength, apu = new 
 }
 async function generateEpk(key) {
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
-    return webcrypto.subtle.generateKey(key.algorithm, true, ['deriveBits']);
+    return crypto.subtle.generateKey(key.algorithm, true, ['deriveBits']);
 }
 function ecdhAllowed(key) {
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
     return ['P-256', 'P-384', 'P-521'].includes(key.algorithm.namedCurve);
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/check_p2s.js
 
-function checkP2s(p2s) {
+function check_p2s_checkP2s(p2s) {
     if (!(p2s instanceof Uint8Array) || p2s.length < 8) {
         throw new JWEInvalid('PBES2 Salt Input must be 8 or more octets');
     }
@@ -1694,17 +4693,17 @@ function checkP2s(p2s) {
 
 function pbes2kw_getCryptoKey(key, alg) {
     if (key instanceof Uint8Array) {
-        return webcrypto.subtle.importKey('raw', key, 'PBKDF2', false, ['deriveBits']);
+        return crypto.subtle.importKey('raw', key, 'PBKDF2', false, ['deriveBits']);
     }
     if (isCryptoKey(key)) {
         checkEncCryptoKey(key, alg, 'deriveBits', 'deriveKey');
         return key;
     }
-    throw new TypeError(invalid_key_input(key, ...types, 'Uint8Array'));
+    throw new TypeError(invalidKeyInput(key, ...types, 'Uint8Array'));
 }
 async function pbes2kw_deriveKey(p2s, alg, p2c, key) {
     checkP2s(p2s);
-    const salt = buffer_utils_p2s(alg, p2s);
+    const salt = concatSalt(alg, p2s);
     const keylen = parseInt(alg.slice(13, 16), 10);
     const subtleAlg = {
         hash: `SHA-${alg.slice(8, 11)}`,
@@ -1718,17 +4717,17 @@ async function pbes2kw_deriveKey(p2s, alg, p2c, key) {
     };
     const cryptoKey = await pbes2kw_getCryptoKey(key, alg);
     if (cryptoKey.usages.includes('deriveBits')) {
-        return new Uint8Array(await webcrypto.subtle.deriveBits(subtleAlg, cryptoKey, keylen));
+        return new Uint8Array(await crypto.subtle.deriveBits(subtleAlg, cryptoKey, keylen));
     }
     if (cryptoKey.usages.includes('deriveKey')) {
-        return webcrypto.subtle.deriveKey(subtleAlg, cryptoKey, wrapAlg, false, ['wrapKey', 'unwrapKey']);
+        return crypto.subtle.deriveKey(subtleAlg, cryptoKey, wrapAlg, false, ['wrapKey', 'unwrapKey']);
     }
     throw new TypeError('PBKDF2 key "usages" must include "deriveBits" or "deriveKey"');
 }
-const encrypt = async (alg, key, cek, p2c = 2048, p2s = random(new Uint8Array(16))) => {
+const pbes2kw_encrypt = async (alg, key, cek, p2c = 2048, p2s = random(new Uint8Array(16))) => {
     const derived = await pbes2kw_deriveKey(p2s, alg, p2c, key);
     const encryptedKey = await wrap(alg.slice(-6), derived, cek);
-    return { encryptedKey, p2c, p2s: encode(p2s) };
+    return { encryptedKey, p2c, p2s: base64url(p2s) };
 };
 const pbes2kw_decrypt = async (alg, key, encryptedKey, p2c, p2s) => {
     const derived = await pbes2kw_deriveKey(p2s, alg, p2c, key);
@@ -1749,16 +4748,6 @@ function subtleRsaEs(alg) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/check_key_length.js
-/* harmony default export */ var check_key_length = ((alg, key) => {
-    if (alg.startsWith('RS') || alg.startsWith('PS')) {
-        const { modulusLength } = key.algorithm;
-        if (typeof modulusLength !== 'number' || modulusLength < 2048) {
-            throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
-        }
-    }
-});
-
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/rsaes.js
 
 
@@ -1769,31 +4758,31 @@ function subtleRsaEs(alg) {
 
 const rsaes_encrypt = async (alg, key, cek) => {
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
     checkEncCryptoKey(key, alg, 'encrypt', 'wrapKey');
-    check_key_length(alg, key);
+    checkKeyLength(alg, key);
     if (key.usages.includes('encrypt')) {
-        return new Uint8Array(await webcrypto.subtle.encrypt(subtleRsaEs(alg), key, cek));
+        return new Uint8Array(await crypto.subtle.encrypt(subtleAlgorithm(alg), key, cek));
     }
     if (key.usages.includes('wrapKey')) {
-        const cryptoKeyCek = await webcrypto.subtle.importKey('raw', cek, ...bogus);
-        return new Uint8Array(await webcrypto.subtle.wrapKey('raw', cryptoKeyCek, key, subtleRsaEs(alg)));
+        const cryptoKeyCek = await crypto.subtle.importKey('raw', cek, ...bogusWebCrypto);
+        return new Uint8Array(await crypto.subtle.wrapKey('raw', cryptoKeyCek, key, subtleAlgorithm(alg)));
     }
     throw new TypeError('RSA-OAEP key "usages" must include "encrypt" or "wrapKey" for this operation');
 };
 const rsaes_decrypt = async (alg, key, encryptedKey) => {
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
     checkEncCryptoKey(key, alg, 'decrypt', 'unwrapKey');
-    check_key_length(alg, key);
+    checkKeyLength(alg, key);
     if (key.usages.includes('decrypt')) {
-        return new Uint8Array(await webcrypto.subtle.decrypt(subtleRsaEs(alg), key, encryptedKey));
+        return new Uint8Array(await crypto.subtle.decrypt(subtleAlgorithm(alg), key, encryptedKey));
     }
     if (key.usages.includes('unwrapKey')) {
-        const cryptoKeyCek = await webcrypto.subtle.unwrapKey('raw', encryptedKey, key, subtleRsaEs(alg), ...bogus);
-        return new Uint8Array(await webcrypto.subtle.exportKey('raw', cryptoKeyCek));
+        const cryptoKeyCek = await crypto.subtle.unwrapKey('raw', encryptedKey, key, subtleAlgorithm(alg), ...bogusWebCrypto);
+        return new Uint8Array(await crypto.subtle.exportKey('raw', cryptoKeyCek));
     }
     throw new TypeError('RSA-OAEP key "usages" must include "decrypt" or "unwrapKey" for this operation');
 };
@@ -1818,13 +4807,7 @@ function cek_bitLength(alg) {
             throw new JOSENotSupported(`Unsupported JWE Algorithm: ${alg}`);
     }
 }
-/* harmony default export */ var lib_cek = ((alg) => random(new Uint8Array(cek_bitLength(alg) >> 3)));
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/format_pem.js
-/* harmony default export */ var format_pem = ((b64, descriptor) => {
-    const newlined = (b64.match(/.{1,64}/g) || []).join('\n');
-    return `-----BEGIN ${descriptor}-----\n${newlined}\n-----END ${descriptor}-----`;
-});
+/* harmony default export */ var cek = ((alg) => random(new Uint8Array(cek_bitLength(alg) >> 3)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/asn1.js
 
@@ -1836,7 +4819,7 @@ function cek_bitLength(alg) {
 
 const genericExport = async (keyType, keyFormat, key) => {
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
     if (!key.extractable) {
         throw new TypeError('CryptoKey is not extractable');
@@ -1844,7 +4827,7 @@ const genericExport = async (keyType, keyFormat, key) => {
     if (key.type !== keyType) {
         throw new TypeError(`key is not a ${keyType} key`);
     }
-    return format_pem(encodeBase64(new Uint8Array(await webcrypto.subtle.exportKey(keyFormat, key))), `${keyType.toUpperCase()} KEY`);
+    return formatPEM(encodeBase64(new Uint8Array(await crypto.subtle.exportKey(keyFormat, key))), `${keyType.toUpperCase()} KEY`);
 };
 const toSPKI = (key) => {
     return genericExport('public', 'spki', key);
@@ -1865,7 +4848,7 @@ const findOid = (keyData, oid, from = 0) => {
         return false;
     return sub.every((value, index) => value === oid[index]) || findOid(keyData, oid, i + 1);
 };
-const asn1_getNamedCurve = (keyData) => {
+const getNamedCurve = (keyData) => {
     switch (true) {
         case findOid(keyData, [0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07]):
             return 'P-256';
@@ -1928,18 +4911,18 @@ const genericImport = async (replace, keyFormat, pem, alg, options) => {
         case 'ECDH-ES+A128KW':
         case 'ECDH-ES+A192KW':
         case 'ECDH-ES+A256KW':
-            algorithm = { name: 'ECDH', namedCurve: asn1_getNamedCurve(keyData) };
+            algorithm = { name: 'ECDH', namedCurve: getNamedCurve(keyData) };
             keyUsages = isPublic ? [] : ['deriveBits'];
             break;
         case (isCloudflareWorkers() || isNodeJs()) && 'EdDSA':
-            const namedCurve = asn1_getNamedCurve(keyData).toUpperCase();
+            const namedCurve = getNamedCurve(keyData).toUpperCase();
             algorithm = { name: `NODE-${namedCurve}`, namedCurve: `NODE-${namedCurve}` };
             keyUsages = isPublic ? ['verify'] : ['sign'];
             break;
         default:
             throw new JOSENotSupported('Invalid or unsupported "alg" (Algorithm) value');
     }
-    return webcrypto.subtle.importKey(keyFormat, keyData, algorithm, (_a = options === null || options === void 0 ? void 0 : options.extractable) !== null && _a !== void 0 ? _a : false, keyUsages);
+    return crypto.subtle.importKey(keyFormat, keyData, algorithm, (_a = options === null || options === void 0 ? void 0 : options.extractable) !== null && _a !== void 0 ? _a : false, keyUsages);
 };
 const fromPKCS8 = (pem, alg, options) => {
     return genericImport(/(?:-----(?:BEGIN|END) PRIVATE KEY-----|\s)/g, 'pkcs8', pem, alg, options);
@@ -2081,13 +5064,13 @@ const parse = async (jwk) => {
         (_b = jwk.key_ops) !== null && _b !== void 0 ? _b : keyUsages,
     ];
     if (algorithm.name === 'PBKDF2') {
-        return webcrypto.subtle.importKey('raw', decode(jwk.k), ...rest);
+        return crypto.subtle.importKey('raw', base64url(jwk.k), ...rest);
     }
     const keyData = { ...jwk };
     delete keyData.alg;
-    return webcrypto.subtle.importKey('jwk', keyData, ...rest);
+    return crypto.subtle.importKey('jwk', keyData, ...rest);
 };
-/* harmony default export */ var jwk_to_key = (parse);
+/* harmony default export */ var jwk_to_key = ((/* unused pure expression or super */ null && (parse)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/key/import.js
 
@@ -2160,28 +5143,28 @@ function spkiFromX509(buf) {
 function getSPKI(x509) {
     const pem = x509.replace(/(?:-----(?:BEGIN|END) CERTIFICATE-----|\s)/g, '');
     const raw = decodeBase64(pem);
-    return format_pem(spkiFromX509(raw), 'PUBLIC KEY');
+    return formatPEM(spkiFromX509(raw), 'PUBLIC KEY');
 }
 async function importSPKI(spki, alg, options) {
     if (typeof spki !== 'string' || spki.indexOf('-----BEGIN PUBLIC KEY-----') !== 0) {
         throw new TypeError('"spki" must be SPKI formatted string');
     }
-    return fromSPKI(spki, alg, options);
+    return importPublic(spki, alg, options);
 }
 async function importX509(x509, alg, options) {
     if (typeof x509 !== 'string' || x509.indexOf('-----BEGIN CERTIFICATE-----') !== 0) {
         throw new TypeError('"x509" must be X.509 formatted string');
     }
     const spki = getSPKI(x509);
-    return fromSPKI(spki, alg, options);
+    return importPublic(spki, alg, options);
 }
 async function importPKCS8(pkcs8, alg, options) {
     if (typeof pkcs8 !== 'string' || pkcs8.indexOf('-----BEGIN PRIVATE KEY-----') !== 0) {
         throw new TypeError('"pkcs8" must be PCKS8 formatted string');
     }
-    return fromPKCS8(pkcs8, alg, options);
+    return importPrivate(pkcs8, alg, options);
 }
-async function importJWK(jwk, alg, octAsKeyObject) {
+async function import_importJWK(jwk, alg, octAsKeyObject) {
     if (!isObject(jwk)) {
         throw new TypeError('JWK must be an object');
     }
@@ -2196,16 +5179,16 @@ async function importJWK(jwk, alg, octAsKeyObject) {
             }
             octAsKeyObject !== null && octAsKeyObject !== void 0 ? octAsKeyObject : (octAsKeyObject = jwk.ext !== true);
             if (octAsKeyObject) {
-                return jwk_to_key({ ...jwk, alg, ext: false });
+                return asKeyObject({ ...jwk, alg, ext: false });
             }
-            return decode(jwk.k);
+            return decodeBase64URL(jwk.k);
         case 'RSA':
             if (jwk.oth !== undefined) {
                 throw new JOSENotSupported('RSA JWK "oth" (Other Primes Info) Parameter value is not supported');
             }
         case 'EC':
         case 'OKP':
-            return jwk_to_key({ ...jwk, alg });
+            return asKeyObject({ ...jwk, alg });
         default:
             throw new JOSENotSupported('Unsupported "kty" (Key Type) Parameter value');
     }
@@ -2217,16 +5200,16 @@ async function importJWK(jwk, alg, octAsKeyObject) {
 const symmetricTypeCheck = (key) => {
     if (key instanceof Uint8Array)
         return;
-    if (!is_key_like(key)) {
-        throw new TypeError(invalid_key_input(key, ...types, 'Uint8Array'));
+    if (!isKeyLike(key)) {
+        throw new TypeError(invalidKeyInput(key, ...types, 'Uint8Array'));
     }
     if (key.type !== 'secret') {
         throw new TypeError(`${types.join(' or ')} instances for symmetric algorithms must be of type "secret"`);
     }
 };
 const asymmetricTypeCheck = (key, usage) => {
-    if (!is_key_like(key)) {
-        throw new TypeError(invalid_key_input(key, ...types));
+    if (!isKeyLike(key)) {
+        throw new TypeError(invalidKeyInput(key, ...types));
     }
     if (key.type === 'secret') {
         throw new TypeError(`${types.join(' or ')} instances for asymmetric algorithms must not be of type "secret"`);
@@ -2244,7 +5227,7 @@ const asymmetricTypeCheck = (key, usage) => {
         throw new TypeError(`${types.join(' or ')} instances for asymmetric algorithm encryption must be of type "public"`);
     }
 };
-const checkKeyType = (alg, key, usage) => {
+const check_key_type_checkKeyType = (alg, key, usage) => {
     const symmetric = alg.startsWith('HS') ||
         alg === 'dir' ||
         alg.startsWith('PBES2') ||
@@ -2256,7 +5239,7 @@ const checkKeyType = (alg, key, usage) => {
         asymmetricTypeCheck(key, usage);
     }
 };
-/* harmony default export */ var check_key_type = (checkKeyType);
+/* harmony default export */ var check_key_type = ((/* unused pure expression or super */ null && (check_key_type_checkKeyType)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/encrypt.js
 
@@ -2269,32 +5252,32 @@ const checkKeyType = (alg, key, usage) => {
 
 async function cbcEncrypt(enc, plaintext, cek, iv, aad) {
     if (!(cek instanceof Uint8Array)) {
-        throw new TypeError(invalid_key_input(cek, 'Uint8Array'));
+        throw new TypeError(invalidKeyInput(cek, 'Uint8Array'));
     }
     const keySize = parseInt(enc.slice(1, 4), 10);
-    const encKey = await webcrypto.subtle.importKey('raw', cek.subarray(keySize >> 3), 'AES-CBC', false, ['encrypt']);
-    const macKey = await webcrypto.subtle.importKey('raw', cek.subarray(0, keySize >> 3), {
+    const encKey = await crypto.subtle.importKey('raw', cek.subarray(keySize >> 3), 'AES-CBC', false, ['encrypt']);
+    const macKey = await crypto.subtle.importKey('raw', cek.subarray(0, keySize >> 3), {
         hash: `SHA-${keySize << 1}`,
         name: 'HMAC',
     }, false, ['sign']);
-    const ciphertext = new Uint8Array(await webcrypto.subtle.encrypt({
+    const ciphertext = new Uint8Array(await crypto.subtle.encrypt({
         iv,
         name: 'AES-CBC',
     }, encKey, plaintext));
     const macData = concat(aad, iv, ciphertext, uint64be(aad.length << 3));
-    const tag = new Uint8Array((await webcrypto.subtle.sign('HMAC', macKey, macData)).slice(0, keySize >> 3));
+    const tag = new Uint8Array((await crypto.subtle.sign('HMAC', macKey, macData)).slice(0, keySize >> 3));
     return { ciphertext, tag };
 }
 async function gcmEncrypt(enc, plaintext, cek, iv, aad) {
     let encKey;
     if (cek instanceof Uint8Array) {
-        encKey = await webcrypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
+        encKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
     }
     else {
         checkEncCryptoKey(cek, enc, 'encrypt');
         encKey = cek;
     }
-    const encrypted = new Uint8Array(await webcrypto.subtle.encrypt({
+    const encrypted = new Uint8Array(await crypto.subtle.encrypt({
         additionalData: aad,
         iv,
         name: 'AES-GCM',
@@ -2306,27 +5289,27 @@ async function gcmEncrypt(enc, plaintext, cek, iv, aad) {
 }
 const encrypt_encrypt = async (enc, plaintext, cek, iv, aad) => {
     if (!isCryptoKey(cek) && !(cek instanceof Uint8Array)) {
-        throw new TypeError(invalid_key_input(cek, ...types, 'Uint8Array'));
+        throw new TypeError(invalidKeyInput(cek, ...types, 'Uint8Array'));
     }
-    check_iv_length(enc, iv);
+    checkIvLength(enc, iv);
     switch (enc) {
         case 'A128CBC-HS256':
         case 'A192CBC-HS384':
         case 'A256CBC-HS512':
             if (cek instanceof Uint8Array)
-                check_cek_length(cek, parseInt(enc.slice(-3), 10));
+                checkCekLength(cek, parseInt(enc.slice(-3), 10));
             return cbcEncrypt(enc, plaintext, cek, iv, aad);
         case 'A128GCM':
         case 'A192GCM':
         case 'A256GCM':
             if (cek instanceof Uint8Array)
-                check_cek_length(cek, parseInt(enc.slice(1, 4), 10));
+                checkCekLength(cek, parseInt(enc.slice(1, 4), 10));
             return gcmEncrypt(enc, plaintext, cek, iv, aad);
         default:
             throw new JOSENotSupported('Unsupported JWE Content Encryption Algorithm');
     }
 };
-/* harmony default export */ var runtime_encrypt = (encrypt_encrypt);
+/* harmony default export */ var runtime_encrypt = ((/* unused pure expression or super */ null && (encrypt_encrypt)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/aesgcmkw.js
 
@@ -2335,13 +5318,13 @@ const encrypt_encrypt = async (enc, plaintext, cek, iv, aad) => {
 
 async function aesgcmkw_wrap(alg, key, cek, iv) {
     const jweAlgorithm = alg.slice(0, 7);
-    iv || (iv = lib_iv(jweAlgorithm));
-    const { ciphertext: encryptedKey, tag } = await runtime_encrypt(jweAlgorithm, cek, key, iv, new Uint8Array(0));
-    return { encryptedKey, iv: encode(iv), tag: encode(tag) };
+    iv || (iv = generateIv(jweAlgorithm));
+    const { ciphertext: encryptedKey, tag } = await encrypt(jweAlgorithm, cek, key, iv, new Uint8Array(0));
+    return { encryptedKey, iv: base64url(iv), tag: base64url(tag) };
 }
 async function aesgcmkw_unwrap(alg, key, encryptedKey, iv, tag) {
     const jweAlgorithm = alg.slice(0, 7);
-    return runtime_decrypt(jweAlgorithm, key, encryptedKey, iv, tag, new Uint8Array(0));
+    return decrypt(jweAlgorithm, key, encryptedKey, iv, tag, new Uint8Array(0));
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/decrypt_key_management.js
@@ -2356,8 +5339,8 @@ async function aesgcmkw_unwrap(alg, key, encryptedKey, iv, tag) {
 
 
 
-async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
-    check_key_type(alg, key, 'decrypt');
+async function decrypt_key_management_decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
+    checkKeyType(alg, key, 'decrypt');
     switch (alg) {
         case 'dir': {
             if (encryptedKey !== undefined)
@@ -2372,7 +5355,7 @@ async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
         case 'ECDH-ES+A256KW': {
             if (!isObject(joseHeader.epk))
                 throw new JWEInvalid(`JOSE Header "epk" (Ephemeral Public Key) missing or invalid`);
-            if (!ecdhAllowed(key))
+            if (!ECDH.ecdhAllowed(key))
                 throw new JOSENotSupported('ECDH with the provided key is not allowed or not supported by your javascript runtime');
             const epk = await importJWK(joseHeader.epk, alg);
             let partyUInfo;
@@ -2380,19 +5363,19 @@ async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
             if (joseHeader.apu !== undefined) {
                 if (typeof joseHeader.apu !== 'string')
                     throw new JWEInvalid(`JOSE Header "apu" (Agreement PartyUInfo) invalid`);
-                partyUInfo = decode(joseHeader.apu);
+                partyUInfo = base64url(joseHeader.apu);
             }
             if (joseHeader.apv !== undefined) {
                 if (typeof joseHeader.apv !== 'string')
                     throw new JWEInvalid(`JOSE Header "apv" (Agreement PartyVInfo) invalid`);
-                partyVInfo = decode(joseHeader.apv);
+                partyVInfo = base64url(joseHeader.apv);
             }
-            const sharedSecret = await deriveKey(epk, key, alg === 'ECDH-ES' ? joseHeader.enc : alg, alg === 'ECDH-ES' ? cek_bitLength(joseHeader.enc) : parseInt(alg.slice(-5, -2), 10), partyUInfo, partyVInfo);
+            const sharedSecret = await ECDH.deriveKey(epk, key, alg === 'ECDH-ES' ? joseHeader.enc : alg, alg === 'ECDH-ES' ? cekLength(joseHeader.enc) : parseInt(alg.slice(-5, -2), 10), partyUInfo, partyVInfo);
             if (alg === 'ECDH-ES')
                 return sharedSecret;
             if (encryptedKey === undefined)
                 throw new JWEInvalid('JWE Encrypted Key missing');
-            return unwrap(alg.slice(-6), sharedSecret, encryptedKey);
+            return aesKw(alg.slice(-6), sharedSecret, encryptedKey);
         }
         case 'RSA1_5':
         case 'RSA-OAEP':
@@ -2401,7 +5384,7 @@ async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
         case 'RSA-OAEP-512': {
             if (encryptedKey === undefined)
                 throw new JWEInvalid('JWE Encrypted Key missing');
-            return rsaes_decrypt(alg, key, encryptedKey);
+            return rsaEs(alg, key, encryptedKey);
         }
         case 'PBES2-HS256+A128KW':
         case 'PBES2-HS384+A192KW':
@@ -2412,14 +5395,14 @@ async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
                 throw new JWEInvalid(`JOSE Header "p2c" (PBES2 Count) missing or invalid`);
             if (typeof joseHeader.p2s !== 'string')
                 throw new JWEInvalid(`JOSE Header "p2s" (PBES2 Salt) missing or invalid`);
-            return pbes2kw_decrypt(alg, key, encryptedKey, joseHeader.p2c, decode(joseHeader.p2s));
+            return pbes2Kw(alg, key, encryptedKey, joseHeader.p2c, base64url(joseHeader.p2s));
         }
         case 'A128KW':
         case 'A192KW':
         case 'A256KW': {
             if (encryptedKey === undefined)
                 throw new JWEInvalid('JWE Encrypted Key missing');
-            return unwrap(alg, key, encryptedKey);
+            return aesKw(alg, key, encryptedKey);
         }
         case 'A128GCMKW':
         case 'A192GCMKW':
@@ -2430,20 +5413,20 @@ async function decryptKeyManagement(alg, key, encryptedKey, joseHeader) {
                 throw new JWEInvalid(`JOSE Header "iv" (Initialization Vector) missing or invalid`);
             if (typeof joseHeader.tag !== 'string')
                 throw new JWEInvalid(`JOSE Header "tag" (Authentication Tag) missing or invalid`);
-            const iv = decode(joseHeader.iv);
-            const tag = decode(joseHeader.tag);
-            return aesgcmkw_unwrap(alg, key, encryptedKey, iv, tag);
+            const iv = base64url(joseHeader.iv);
+            const tag = base64url(joseHeader.tag);
+            return aesGcmKw(alg, key, encryptedKey, iv, tag);
         }
         default: {
             throw new JOSENotSupported('Invalid or unsupported "alg" (JWE Algorithm) header value');
         }
     }
 }
-/* harmony default export */ var decrypt_key_management = (decryptKeyManagement);
+/* harmony default export */ var decrypt_key_management = ((/* unused pure expression or super */ null && (decrypt_key_management_decryptKeyManagement)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/validate_crit.js
 
-function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
+function validate_crit_validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
     if (joseHeader.crit !== undefined && protectedHeader.crit === undefined) {
         throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
     }
@@ -2475,20 +5458,7 @@ function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader,
     }
     return new Set(protectedHeader.crit);
 }
-/* harmony default export */ var validate_crit = (validateCrit);
-
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/validate_algorithms.js
-const validateAlgorithms = (option, algorithms) => {
-    if (algorithms !== undefined &&
-        (!Array.isArray(algorithms) || algorithms.some((s) => typeof s !== 'string'))) {
-        throw new TypeError(`"${option}" option must be an array of strings`);
-    }
-    if (!algorithms) {
-        return undefined;
-    }
-    return new Set(algorithms);
-};
-/* harmony default export */ var validate_algorithms = (validateAlgorithms);
+/* harmony default export */ var validate_crit = ((/* unused pure expression or super */ null && (validate_crit_validateCrit)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jwe/flattened/decrypt.js
 
@@ -2502,7 +5472,7 @@ const validateAlgorithms = (option, algorithms) => {
 
 
 
-async function flattenedDecrypt(jwe, key, options) {
+async function decrypt_flattenedDecrypt(jwe, key, options) {
     var _a;
     if (!isObject(jwe)) {
         throw new JWEInvalid('Flattened JWE must be an object');
@@ -2536,7 +5506,7 @@ async function flattenedDecrypt(jwe, key, options) {
     }
     let parsedProt;
     if (jwe.protected) {
-        const protectedHeader = decode(jwe.protected);
+        const protectedHeader = base64url(jwe.protected);
         try {
             parsedProt = JSON.parse(decoder.decode(protectedHeader));
         }
@@ -2544,7 +5514,7 @@ async function flattenedDecrypt(jwe, key, options) {
             throw new JWEInvalid('JWE Protected Header is invalid');
         }
     }
-    if (!is_disjoint(parsedProt, jwe.header, jwe.unprotected)) {
+    if (!isDisjoint(parsedProt, jwe.header, jwe.unprotected)) {
         throw new JWEInvalid('JWE Protected, JWE Unprotected Header, and JWE Per-Recipient Unprotected Header Parameter names must be disjoint');
     }
     const joseHeader = {
@@ -2552,7 +5522,7 @@ async function flattenedDecrypt(jwe, key, options) {
         ...jwe.header,
         ...jwe.unprotected,
     };
-    validate_crit(JWEInvalid, new Map(), options === null || options === void 0 ? void 0 : options.crit, parsedProt, joseHeader);
+    validateCrit(JWEInvalid, new Map(), options === null || options === void 0 ? void 0 : options.crit, parsedProt, joseHeader);
     if (joseHeader.zip !== undefined) {
         if (!parsedProt || !parsedProt.zip) {
             throw new JWEInvalid('JWE "zip" (Compression Algorithm) Header MUST be integrity protected');
@@ -2568,9 +5538,9 @@ async function flattenedDecrypt(jwe, key, options) {
     if (typeof enc !== 'string' || !enc) {
         throw new JWEInvalid('missing JWE Encryption Algorithm (enc) in JWE Header');
     }
-    const keyManagementAlgorithms = options && validate_algorithms('keyManagementAlgorithms', options.keyManagementAlgorithms);
+    const keyManagementAlgorithms = options && validateAlgorithms('keyManagementAlgorithms', options.keyManagementAlgorithms);
     const contentEncryptionAlgorithms = options &&
-        validate_algorithms('contentEncryptionAlgorithms', options.contentEncryptionAlgorithms);
+        validateAlgorithms('contentEncryptionAlgorithms', options.contentEncryptionAlgorithms);
     if (keyManagementAlgorithms && !keyManagementAlgorithms.has(alg)) {
         throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter not allowed');
     }
@@ -2579,7 +5549,7 @@ async function flattenedDecrypt(jwe, key, options) {
     }
     let encryptedKey;
     if (jwe.encrypted_key !== undefined) {
-        encryptedKey = decode(jwe.encrypted_key);
+        encryptedKey = base64url(jwe.encrypted_key);
     }
     let resolvedKey = false;
     if (typeof key === 'function') {
@@ -2588,16 +5558,16 @@ async function flattenedDecrypt(jwe, key, options) {
     }
     let cek;
     try {
-        cek = await decrypt_key_management(alg, key, encryptedKey, joseHeader);
+        cek = await decryptKeyManagement(alg, key, encryptedKey, joseHeader);
     }
     catch (err) {
         if (err instanceof TypeError) {
             throw err;
         }
-        cek = lib_cek(enc);
+        cek = generateCek(enc);
     }
-    const iv = decode(jwe.iv);
-    const tag = decode(jwe.tag);
+    const iv = base64url(jwe.iv);
+    const tag = base64url(jwe.tag);
     const protectedHeader = encoder.encode((_a = jwe.protected) !== null && _a !== void 0 ? _a : '');
     let additionalData;
     if (jwe.aad !== undefined) {
@@ -2606,7 +5576,7 @@ async function flattenedDecrypt(jwe, key, options) {
     else {
         additionalData = protectedHeader;
     }
-    let plaintext = await runtime_decrypt(enc, cek, decode(jwe.ciphertext), iv, tag, additionalData);
+    let plaintext = await decrypt(enc, cek, base64url(jwe.ciphertext), iv, tag, additionalData);
     if (joseHeader.zip === 'DEF') {
         plaintext = await ((options === null || options === void 0 ? void 0 : options.inflateRaw) || inflate)(plaintext);
     }
@@ -2615,7 +5585,7 @@ async function flattenedDecrypt(jwe, key, options) {
         result.protectedHeader = parsedProt;
     }
     if (jwe.aad !== undefined) {
-        result.additionalAuthenticatedData = decode(jwe.aad);
+        result.additionalAuthenticatedData = base64url(jwe.aad);
     }
     if (jwe.unprotected !== undefined) {
         result.sharedUnprotectedHeader = jwe.unprotected;
@@ -2633,7 +5603,7 @@ async function flattenedDecrypt(jwe, key, options) {
 
 
 
-async function compactDecrypt(jwe, key, options) {
+async function decrypt_compactDecrypt(jwe, key, options) {
     if (jwe instanceof Uint8Array) {
         jwe = decoder.decode(jwe);
     }
@@ -2696,36 +5666,36 @@ async function generalDecrypt(jwe, key, options) {
 
 
 
-const keyToJWK = async (key) => {
+const key_to_jwk_keyToJWK = async (key) => {
     if (key instanceof Uint8Array) {
         return {
             kty: 'oct',
-            k: encode(key),
+            k: base64url(key),
         };
     }
     if (!isCryptoKey(key)) {
-        throw new TypeError(invalid_key_input(key, ...types, 'Uint8Array'));
+        throw new TypeError(invalidKeyInput(key, ...types, 'Uint8Array'));
     }
     if (!key.extractable) {
         throw new TypeError('non-extractable CryptoKey cannot be exported as a JWK');
     }
-    const { ext, key_ops, alg, use, ...jwk } = await webcrypto.subtle.exportKey('jwk', key);
+    const { ext, key_ops, alg, use, ...jwk } = await crypto.subtle.exportKey('jwk', key);
     return jwk;
 };
-/* harmony default export */ var key_to_jwk = (keyToJWK);
+/* harmony default export */ var key_to_jwk = ((/* unused pure expression or super */ null && (key_to_jwk_keyToJWK)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/key/export.js
 
 
 
 async function exportSPKI(key) {
-    return toSPKI(key);
+    return exportPublic(key);
 }
 async function exportPKCS8(key) {
-    return toPKCS8(key);
+    return exportPrivate(key);
 }
-async function exportJWK(key) {
-    return key_to_jwk(key);
+async function export_exportJWK(key) {
+    return keyToJWK(key);
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/encrypt_key_management.js
@@ -2739,11 +5709,11 @@ async function exportJWK(key) {
 
 
 
-async function encryptKeyManagement(alg, enc, key, providedCek, providedParameters = {}) {
+async function encrypt_key_management_encryptKeyManagement(alg, enc, key, providedCek, providedParameters = {}) {
     let encryptedKey;
     let parameters;
     let cek;
-    check_key_type(alg, key, 'encrypt');
+    checkKeyType(alg, key, 'encrypt');
     switch (alg) {
         case 'dir': {
             cek = key;
@@ -2753,28 +5723,28 @@ async function encryptKeyManagement(alg, enc, key, providedCek, providedParamete
         case 'ECDH-ES+A128KW':
         case 'ECDH-ES+A192KW':
         case 'ECDH-ES+A256KW': {
-            if (!ecdhAllowed(key)) {
+            if (!ECDH.ecdhAllowed(key)) {
                 throw new JOSENotSupported('ECDH with the provided key is not allowed or not supported by your javascript runtime');
             }
             const { apu, apv } = providedParameters;
             let { epk: ephemeralKey } = providedParameters;
-            ephemeralKey || (ephemeralKey = (await generateEpk(key)).privateKey);
+            ephemeralKey || (ephemeralKey = (await ECDH.generateEpk(key)).privateKey);
             const { x, y, crv, kty } = await exportJWK(ephemeralKey);
-            const sharedSecret = await deriveKey(key, ephemeralKey, alg === 'ECDH-ES' ? enc : alg, alg === 'ECDH-ES' ? cek_bitLength(enc) : parseInt(alg.slice(-5, -2), 10), apu, apv);
+            const sharedSecret = await ECDH.deriveKey(key, ephemeralKey, alg === 'ECDH-ES' ? enc : alg, alg === 'ECDH-ES' ? cekLength(enc) : parseInt(alg.slice(-5, -2), 10), apu, apv);
             parameters = { epk: { x, crv, kty } };
             if (kty === 'EC')
                 parameters.epk.y = y;
             if (apu)
-                parameters.apu = encode(apu);
+                parameters.apu = base64url(apu);
             if (apv)
-                parameters.apv = encode(apv);
+                parameters.apv = base64url(apv);
             if (alg === 'ECDH-ES') {
                 cek = sharedSecret;
                 break;
             }
-            cek = providedCek || lib_cek(enc);
+            cek = providedCek || generateCek(enc);
             const kwAlg = alg.slice(-6);
-            encryptedKey = await wrap(kwAlg, sharedSecret, cek);
+            encryptedKey = await aesKw(kwAlg, sharedSecret, cek);
             break;
         }
         case 'RSA1_5':
@@ -2782,31 +5752,31 @@ async function encryptKeyManagement(alg, enc, key, providedCek, providedParamete
         case 'RSA-OAEP-256':
         case 'RSA-OAEP-384':
         case 'RSA-OAEP-512': {
-            cek = providedCek || lib_cek(enc);
-            encryptedKey = await rsaes_encrypt(alg, key, cek);
+            cek = providedCek || generateCek(enc);
+            encryptedKey = await rsaEs(alg, key, cek);
             break;
         }
         case 'PBES2-HS256+A128KW':
         case 'PBES2-HS384+A192KW':
         case 'PBES2-HS512+A256KW': {
-            cek = providedCek || lib_cek(enc);
+            cek = providedCek || generateCek(enc);
             const { p2c, p2s } = providedParameters;
-            ({ encryptedKey, ...parameters } = await encrypt(alg, key, cek, p2c, p2s));
+            ({ encryptedKey, ...parameters } = await pbes2Kw(alg, key, cek, p2c, p2s));
             break;
         }
         case 'A128KW':
         case 'A192KW':
         case 'A256KW': {
-            cek = providedCek || lib_cek(enc);
-            encryptedKey = await wrap(alg, key, cek);
+            cek = providedCek || generateCek(enc);
+            encryptedKey = await aesKw(alg, key, cek);
             break;
         }
         case 'A128GCMKW':
         case 'A192GCMKW':
         case 'A256GCMKW': {
-            cek = providedCek || lib_cek(enc);
+            cek = providedCek || generateCek(enc);
             const { iv } = providedParameters;
-            ({ encryptedKey, ...parameters } = await aesgcmkw_wrap(alg, key, cek, iv));
+            ({ encryptedKey, ...parameters } = await aesGcmKw(alg, key, cek, iv));
             break;
         }
         default: {
@@ -2815,7 +5785,7 @@ async function encryptKeyManagement(alg, enc, key, providedCek, providedParamete
     }
     return { cek, encryptedKey, parameters };
 }
-/* harmony default export */ var encrypt_key_management = (encryptKeyManagement);
+/* harmony default export */ var encrypt_key_management = ((/* unused pure expression or super */ null && (encrypt_key_management_encryptKeyManagement)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jwe/flattened/encrypt.js
 
@@ -2827,8 +5797,8 @@ async function encryptKeyManagement(alg, enc, key, providedCek, providedParamete
 
 
 
-const unprotected = Symbol();
-class FlattenedEncrypt {
+const encrypt_unprotected = Symbol();
+class encrypt_FlattenedEncrypt {
     constructor(plaintext) {
         if (!(plaintext instanceof Uint8Array)) {
             throw new TypeError('plaintext must be an instance of Uint8Array');
@@ -2885,7 +5855,7 @@ class FlattenedEncrypt {
         if (!this._protectedHeader && !this._unprotectedHeader && !this._sharedUnprotectedHeader) {
             throw new JWEInvalid('either setProtectedHeader, setUnprotectedHeader, or sharedUnprotectedHeader must be called before #encrypt()');
         }
-        if (!is_disjoint(this._protectedHeader, this._unprotectedHeader, this._sharedUnprotectedHeader)) {
+        if (!isDisjoint(this._protectedHeader, this._unprotectedHeader, this._sharedUnprotectedHeader)) {
             throw new JWEInvalid('JWE Protected, JWE Shared Unprotected and JWE Per-Recipient Header Parameter names must be disjoint');
         }
         const joseHeader = {
@@ -2893,7 +5863,7 @@ class FlattenedEncrypt {
             ...this._unprotectedHeader,
             ...this._sharedUnprotectedHeader,
         };
-        validate_crit(JWEInvalid, new Map(), options === null || options === void 0 ? void 0 : options.crit, this._protectedHeader, joseHeader);
+        validateCrit(JWEInvalid, new Map(), options === null || options === void 0 ? void 0 : options.crit, this._protectedHeader, joseHeader);
         if (joseHeader.zip !== undefined) {
             if (!this._protectedHeader || !this._protectedHeader.zip) {
                 throw new JWEInvalid('JWE "zip" (Compression Algorithm) Header MUST be integrity protected');
@@ -2923,9 +5893,9 @@ class FlattenedEncrypt {
         let cek;
         {
             let parameters;
-            ({ cek, encryptedKey, parameters } = await encrypt_key_management(alg, enc, key, this._cek, this._keyManagementParameters));
+            ({ cek, encryptedKey, parameters } = await encryptKeyManagement(alg, enc, key, this._cek, this._keyManagementParameters));
             if (parameters) {
-                if (options && unprotected in options) {
+                if (options && encrypt_unprotected in options) {
                     if (!this._unprotectedHeader) {
                         this.setUnprotectedHeader(parameters);
                     }
@@ -2943,18 +5913,18 @@ class FlattenedEncrypt {
                 }
             }
         }
-        this._iv || (this._iv = lib_iv(enc));
+        this._iv || (this._iv = generateIv(enc));
         let additionalData;
         let protectedHeader;
         let aadMember;
         if (this._protectedHeader) {
-            protectedHeader = encoder.encode(encode(JSON.stringify(this._protectedHeader)));
+            protectedHeader = encoder.encode(base64url(JSON.stringify(this._protectedHeader)));
         }
         else {
             protectedHeader = encoder.encode('');
         }
         if (this._aad) {
-            aadMember = encode(this._aad);
+            aadMember = base64url(this._aad);
             additionalData = concat(protectedHeader, encoder.encode('.'), encoder.encode(aadMember));
         }
         else {
@@ -2964,19 +5934,19 @@ class FlattenedEncrypt {
         let tag;
         if (joseHeader.zip === 'DEF') {
             const deflated = await ((options === null || options === void 0 ? void 0 : options.deflateRaw) || deflate)(this._plaintext);
-            ({ ciphertext, tag } = await runtime_encrypt(enc, deflated, cek, this._iv, additionalData));
+            ({ ciphertext, tag } = await encrypt(enc, deflated, cek, this._iv, additionalData));
         }
         else {
             ;
-            ({ ciphertext, tag } = await runtime_encrypt(enc, this._plaintext, cek, this._iv, additionalData));
+            ({ ciphertext, tag } = await encrypt(enc, this._plaintext, cek, this._iv, additionalData));
         }
         const jwe = {
-            ciphertext: encode(ciphertext),
-            iv: encode(this._iv),
-            tag: encode(tag),
+            ciphertext: base64url(ciphertext),
+            iv: base64url(this._iv),
+            tag: base64url(tag),
         };
         if (encryptedKey) {
-            jwe.encrypted_key = encode(encryptedKey);
+            jwe.encrypted_key = base64url(encryptedKey);
         }
         if (aadMember) {
             jwe.aad = aadMember;
@@ -3088,7 +6058,7 @@ class GeneralEncrypt {
         let enc;
         for (let i = 0; i < this._recipients.length; i++) {
             const recipient = this._recipients[i];
-            if (!is_disjoint(this._protectedHeader, this._unprotectedHeader, recipient.unprotectedHeader)) {
+            if (!isDisjoint(this._protectedHeader, this._unprotectedHeader, recipient.unprotectedHeader)) {
                 throw new JWEInvalid('JWE Protected, JWE Shared Unprotected and JWE Per-Recipient Header Parameter names must be disjoint');
             }
             const joseHeader = {
@@ -3112,14 +6082,14 @@ class GeneralEncrypt {
             else if (enc !== joseHeader.enc) {
                 throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter must be the same for all recipients');
             }
-            validate_crit(JWEInvalid, new Map(), recipient.options.crit, this._protectedHeader, joseHeader);
+            validateCrit(JWEInvalid, new Map(), recipient.options.crit, this._protectedHeader, joseHeader);
             if (joseHeader.zip !== undefined) {
                 if (!this._protectedHeader || !this._protectedHeader.zip) {
                     throw new JWEInvalid('JWE "zip" (Compression Algorithm) Header MUST be integrity protected');
                 }
             }
         }
-        const cek = lib_cek(enc);
+        const cek = generateCek(enc);
         let jwe = {
             ciphertext: '',
             iv: '',
@@ -3163,10 +6133,10 @@ class GeneralEncrypt {
                     target.header = flattened.header;
                 continue;
             }
-            const { encryptedKey, parameters } = await encrypt_key_management(((_a = recipient.unprotectedHeader) === null || _a === void 0 ? void 0 : _a.alg) ||
+            const { encryptedKey, parameters } = await encryptKeyManagement(((_a = recipient.unprotectedHeader) === null || _a === void 0 ? void 0 : _a.alg) ||
                 ((_b = this._protectedHeader) === null || _b === void 0 ? void 0 : _b.alg) ||
                 ((_c = this._unprotectedHeader) === null || _c === void 0 ? void 0 : _c.alg), enc, recipient.key, cek, { p2c });
-            target.encrypted_key = encode(encryptedKey);
+            target.encrypted_key = base64url(encryptedKey);
             if (recipient.unprotectedHeader || parameters)
                 target.header = { ...recipient.unprotectedHeader, ...parameters };
         }
@@ -3216,11 +6186,11 @@ function get_sign_verify_key_getCryptoKey(alg, key, usage) {
     }
     if (key instanceof Uint8Array) {
         if (!alg.startsWith('HS')) {
-            throw new TypeError(invalid_key_input(key, ...types));
+            throw new TypeError(invalidKeyInput(key, ...types));
         }
-        return webcrypto.subtle.importKey('raw', key, { hash: `SHA-${alg.slice(-3)}`, name: 'HMAC' }, false, [usage]);
+        return crypto.subtle.importKey('raw', key, { hash: `SHA-${alg.slice(-3)}`, name: 'HMAC' }, false, [usage]);
     }
-    throw new TypeError(invalid_key_input(key, ...types, 'Uint8Array'));
+    throw new TypeError(invalidKeyInput(key, ...types, 'Uint8Array'));
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/verify.js
@@ -3228,18 +6198,18 @@ function get_sign_verify_key_getCryptoKey(alg, key, usage) {
 
 
 
-const verify = async (alg, key, signature, data) => {
-    const cryptoKey = await get_sign_verify_key_getCryptoKey(alg, key, 'verify');
-    check_key_length(alg, cryptoKey);
-    const algorithm = subtleDsa(alg, cryptoKey.algorithm);
+const verify_verify = async (alg, key, signature, data) => {
+    const cryptoKey = await getVerifyKey(alg, key, 'verify');
+    checkKeyLength(alg, cryptoKey);
+    const algorithm = subtleAlgorithm(alg, cryptoKey.algorithm);
     try {
-        return await webcrypto.subtle.verify(algorithm, cryptoKey, signature, data);
+        return await crypto.subtle.verify(algorithm, cryptoKey, signature, data);
     }
     catch (_a) {
         return false;
     }
 };
-/* harmony default export */ var runtime_verify = (verify);
+/* harmony default export */ var runtime_verify = ((/* unused pure expression or super */ null && (verify_verify)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jws/flattened/verify.js
 
@@ -3251,7 +6221,7 @@ const verify = async (alg, key, signature, data) => {
 
 
 
-async function flattenedVerify(jws, key, options) {
+async function verify_flattenedVerify(jws, key, options) {
     var _a;
     if (!isObject(jws)) {
         throw new JWSInvalid('Flattened JWS must be an object');
@@ -3273,7 +6243,7 @@ async function flattenedVerify(jws, key, options) {
     }
     let parsedProt = {};
     if (jws.protected) {
-        const protectedHeader = decode(jws.protected);
+        const protectedHeader = base64url(jws.protected);
         try {
             parsedProt = JSON.parse(decoder.decode(protectedHeader));
         }
@@ -3281,14 +6251,14 @@ async function flattenedVerify(jws, key, options) {
             throw new JWSInvalid('JWS Protected Header is invalid');
         }
     }
-    if (!is_disjoint(parsedProt, jws.header)) {
+    if (!isDisjoint(parsedProt, jws.header)) {
         throw new JWSInvalid('JWS Protected and JWS Unprotected Header Parameter names must be disjoint');
     }
     const joseHeader = {
         ...parsedProt,
         ...jws.header,
     };
-    const extensions = validate_crit(JWSInvalid, new Map([['b64', true]]), options === null || options === void 0 ? void 0 : options.crit, parsedProt, joseHeader);
+    const extensions = validateCrit(JWSInvalid, new Map([['b64', true]]), options === null || options === void 0 ? void 0 : options.crit, parsedProt, joseHeader);
     let b64 = true;
     if (extensions.has('b64')) {
         b64 = parsedProt.b64;
@@ -3300,7 +6270,7 @@ async function flattenedVerify(jws, key, options) {
     if (typeof alg !== 'string' || !alg) {
         throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
     }
-    const algorithms = options && validate_algorithms('algorithms', options.algorithms);
+    const algorithms = options && validateAlgorithms('algorithms', options.algorithms);
     if (algorithms && !algorithms.has(alg)) {
         throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter not allowed');
     }
@@ -3317,16 +6287,16 @@ async function flattenedVerify(jws, key, options) {
         key = await key(parsedProt, jws);
         resolvedKey = true;
     }
-    check_key_type(alg, key, 'verify');
+    checkKeyType(alg, key, 'verify');
     const data = concat(encoder.encode((_a = jws.protected) !== null && _a !== void 0 ? _a : ''), encoder.encode('.'), typeof jws.payload === 'string' ? encoder.encode(jws.payload) : jws.payload);
-    const signature = decode(jws.signature);
-    const verified = await runtime_verify(alg, key, signature, data);
+    const signature = base64url(jws.signature);
+    const verified = await verify(alg, key, signature, data);
     if (!verified) {
         throw new JWSSignatureVerificationFailed();
     }
     let payload;
     if (b64) {
-        payload = decode(jws.payload);
+        payload = base64url(jws.payload);
     }
     else if (typeof jws.payload === 'string') {
         payload = encoder.encode(jws.payload);
@@ -3351,7 +6321,7 @@ async function flattenedVerify(jws, key, options) {
 
 
 
-async function compactVerify(jws, key, options) {
+async function verify_compactVerify(jws, key, options) {
     if (jws instanceof Uint8Array) {
         jws = decoder.decode(jws);
     }
@@ -3396,9 +6366,6 @@ async function generalVerify(jws, key, options) {
     throw new JWSSignatureVerificationFailed();
 }
 
-;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/epoch.js
-/* harmony default export */ var epoch = ((date) => Math.floor(date.getTime() / 1000));
-
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/secs.js
 const minute = 60;
 const hour = minute * 60;
@@ -3406,7 +6373,7 @@ const day = hour * 24;
 const week = day * 7;
 const year = day * 365.25;
 const REGEX = /^(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)$/i;
-/* harmony default export */ var secs = ((str) => {
+/* harmony default export */ var lib_secs = ((str) => {
     const matched = REGEX.exec(str);
     if (!matched) {
         throw new TypeError('Invalid time period format');
@@ -3548,7 +6515,7 @@ async function jwtVerify(jwt, key, options) {
     if (((_a = verified.protectedHeader.crit) === null || _a === void 0 ? void 0 : _a.includes('b64')) && verified.protectedHeader.b64 === false) {
         throw new JWTInvalid('JWTs MUST NOT use unencoded payload');
     }
-    const payload = jwt_claims_set(verified.protectedHeader, verified.payload, options);
+    const payload = jwtPayload(verified.protectedHeader, verified.payload, options);
     const result = { payload, protectedHeader: verified.protectedHeader };
     if (typeof key === 'function') {
         return { ...result, key: verified.key };
@@ -3562,7 +6529,7 @@ async function jwtVerify(jwt, key, options) {
 
 async function jwtDecrypt(jwt, key, options) {
     const decrypted = await compactDecrypt(jwt, key, options);
-    const payload = jwt_claims_set(decrypted.protectedHeader, decrypted.plaintext, options);
+    const payload = jwtPayload(decrypted.protectedHeader, decrypted.plaintext, options);
     const { protectedHeader } = decrypted;
     if (protectedHeader.iss !== undefined && protectedHeader.iss !== payload.iss) {
         throw new JWTClaimValidationFailed('replicated "iss" claim header parameter mismatch', 'iss', 'mismatch');
@@ -3583,7 +6550,7 @@ async function jwtDecrypt(jwt, key, options) {
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jwe/compact/encrypt.js
 
-class CompactEncrypt {
+class encrypt_CompactEncrypt {
     constructor(plaintext) {
         this._flattened = new FlattenedEncrypt(plaintext);
     }
@@ -3614,13 +6581,13 @@ class CompactEncrypt {
 
 
 
-const sign = async (alg, key, data) => {
-    const cryptoKey = await get_sign_verify_key_getCryptoKey(alg, key, 'sign');
-    check_key_length(alg, cryptoKey);
-    const signature = await webcrypto.subtle.sign(subtleDsa(alg, cryptoKey.algorithm), cryptoKey, data);
+const sign_sign = async (alg, key, data) => {
+    const cryptoKey = await getSignKey(alg, key, 'sign');
+    checkKeyLength(alg, cryptoKey);
+    const signature = await crypto.subtle.sign(subtleAlgorithm(alg, cryptoKey.algorithm), cryptoKey, data);
     return new Uint8Array(signature);
 };
-/* harmony default export */ var runtime_sign = (sign);
+/* harmony default export */ var runtime_sign = ((/* unused pure expression or super */ null && (sign_sign)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jws/flattened/sign.js
 
@@ -3630,7 +6597,7 @@ const sign = async (alg, key, data) => {
 
 
 
-class FlattenedSign {
+class sign_FlattenedSign {
     constructor(payload) {
         if (!(payload instanceof Uint8Array)) {
             throw new TypeError('payload must be an instance of Uint8Array');
@@ -3655,14 +6622,14 @@ class FlattenedSign {
         if (!this._protectedHeader && !this._unprotectedHeader) {
             throw new JWSInvalid('either setProtectedHeader or setUnprotectedHeader must be called before #sign()');
         }
-        if (!is_disjoint(this._protectedHeader, this._unprotectedHeader)) {
+        if (!isDisjoint(this._protectedHeader, this._unprotectedHeader)) {
             throw new JWSInvalid('JWS Protected and JWS Unprotected Header Parameter names must be disjoint');
         }
         const joseHeader = {
             ...this._protectedHeader,
             ...this._unprotectedHeader,
         };
-        const extensions = validate_crit(JWSInvalid, new Map([['b64', true]]), options === null || options === void 0 ? void 0 : options.crit, this._protectedHeader, joseHeader);
+        const extensions = validateCrit(JWSInvalid, new Map([['b64', true]]), options === null || options === void 0 ? void 0 : options.crit, this._protectedHeader, joseHeader);
         let b64 = true;
         if (extensions.has('b64')) {
             b64 = this._protectedHeader.b64;
@@ -3674,22 +6641,22 @@ class FlattenedSign {
         if (typeof alg !== 'string' || !alg) {
             throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
         }
-        check_key_type(alg, key, 'sign');
+        checkKeyType(alg, key, 'sign');
         let payload = this._payload;
         if (b64) {
-            payload = encoder.encode(encode(payload));
+            payload = encoder.encode(base64url(payload));
         }
         let protectedHeader;
         if (this._protectedHeader) {
-            protectedHeader = encoder.encode(encode(JSON.stringify(this._protectedHeader)));
+            protectedHeader = encoder.encode(base64url(JSON.stringify(this._protectedHeader)));
         }
         else {
             protectedHeader = encoder.encode('');
         }
         const data = concat(protectedHeader, encoder.encode('.'), payload);
-        const signature = await runtime_sign(alg, key, data);
+        const signature = await sign(alg, key, data);
         const jws = {
-            signature: encode(signature),
+            signature: base64url(signature),
             payload: '',
         };
         if (b64) {
@@ -3707,7 +6674,7 @@ class FlattenedSign {
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jws/compact/sign.js
 
-class CompactSign {
+class sign_CompactSign {
     constructor(payload) {
         this._flattened = new FlattenedSign(payload);
     }
@@ -3797,7 +6764,7 @@ class GeneralSign {
 
 
 
-class ProduceJWT {
+class produce_ProduceJWT {
     constructor(payload) {
         if (!isObject(payload)) {
             throw new TypeError('JWT Claims Set MUST be an object');
@@ -3854,7 +6821,7 @@ class ProduceJWT {
 
 
 
-class SignJWT extends ProduceJWT {
+class SignJWT extends (/* unused pure expression or super */ null && (ProduceJWT)) {
     setProtectedHeader(protectedHeader) {
         this._protectedHeader = protectedHeader;
         return this;
@@ -3876,7 +6843,7 @@ class SignJWT extends ProduceJWT {
 
 
 
-class EncryptJWT extends ProduceJWT {
+class EncryptJWT extends (/* unused pure expression or super */ null && (ProduceJWT)) {
     setProtectedHeader(protectedHeader) {
         if (this._protectedHeader) {
             throw new TypeError('setProtectedHeader can only be called once');
@@ -3988,7 +6955,7 @@ async function calculateJwkThumbprint(jwk, digestAlgorithm = 'sha256') {
             throw new JOSENotSupported('"kty" (Key Type) Parameter missing or unsupported');
     }
     const data = encoder.encode(JSON.stringify(components));
-    return encode(await runtime_digest(digestAlgorithm, data));
+    return base64url(await digest(digestAlgorithm, data));
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jwk/embedded.js
@@ -4027,7 +6994,7 @@ function getKtyFromAlg(alg) {
             throw new JOSENotSupported('Unsupported "alg" value for a JSON Web Key Set');
     }
 }
-function isJWKSLike(jwks) {
+function local_isJWKSLike(jwks) {
     return (jwks &&
         typeof jwks === 'object' &&
         Array.isArray(jwks.keys) &&
@@ -4042,10 +7009,10 @@ function clone(obj) {
     }
     return JSON.parse(JSON.stringify(obj));
 }
-class LocalJWKSet {
+class local_LocalJWKSet {
     constructor(jwks) {
         this._cached = new WeakMap();
-        if (!isJWKSLike(jwks)) {
+        if (!local_isJWKSLike(jwks)) {
             throw new JWKSInvalid('JSON Web Key Set malformed');
         }
         this._jwks = clone(jwks);
@@ -4107,12 +7074,12 @@ class LocalJWKSet {
     }
 }
 function createLocalJWKSet(jwks) {
-    return LocalJWKSet.prototype.getKey.bind(new LocalJWKSet(jwks));
+    return local_LocalJWKSet.prototype.getKey.bind(new local_LocalJWKSet(jwks));
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/runtime/fetch_jwks.js
 
-const fetchJwks = async (url, timeout, options) => {
+const fetch_jwks_fetchJwks = async (url, timeout, options) => {
     let controller;
     let id;
     let timedOut = false;
@@ -4144,14 +7111,14 @@ const fetchJwks = async (url, timeout, options) => {
         throw new JOSEError('Failed to parse the JSON Web Key Set HTTP response as JSON');
     }
 };
-/* harmony default export */ var fetch_jwks = (fetchJwks);
+/* harmony default export */ var fetch_jwks = ((/* unused pure expression or super */ null && (fetch_jwks_fetchJwks)));
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/jwks/remote.js
 
 
 
 
-class RemoteJWKSet extends LocalJWKSet {
+class RemoteJWKSet extends (/* unused pure expression or super */ null && (LocalJWKSet)) {
     constructor(url, options) {
         super({ keys: [] });
         this._jwks = undefined;
@@ -4208,7 +7175,7 @@ class RemoteJWKSet extends LocalJWKSet {
             });
         }
         if (!this._pendingFetch) {
-            this._pendingFetch = fetch_jwks(this._url, this._timeoutDuration, this._options)
+            this._pendingFetch = fetchJwks(this._url, this._timeoutDuration, this._options)
                 .then((json) => {
                 if (!isJWKSLike(json)) {
                     throw new JWKSInvalid('JSON Web Key Set malformed');
@@ -4235,10 +7202,10 @@ function createRemoteJWKSet(url, options) {
 
 
 
-class UnsecuredJWT extends ProduceJWT {
+class UnsecuredJWT extends (/* unused pure expression or super */ null && (ProduceJWT)) {
     encode() {
-        const header = encode(JSON.stringify({ alg: 'none' }));
-        const payload = encode(JSON.stringify(this._payload));
+        const header = base64url.encode(JSON.stringify({ alg: 'none' }));
+        const payload = base64url.encode(JSON.stringify(this._payload));
         return `${header}.${payload}.`;
     }
     static decode(jwt, options) {
@@ -4251,14 +7218,14 @@ class UnsecuredJWT extends ProduceJWT {
         }
         let header;
         try {
-            header = JSON.parse(decoder.decode(decode(encodedHeader)));
+            header = JSON.parse(decoder.decode(base64url.decode(encodedHeader)));
             if (header.alg !== 'none')
                 throw new Error();
         }
         catch (_a) {
             throw new JWTInvalid('Invalid Unsecured JWT');
         }
-        const payload = jwt_claims_set(header, decode(encodedPayload), options);
+        const payload = jwtPayload(header, base64url.decode(encodedPayload), options);
         return { payload, header };
     }
 }
@@ -4293,7 +7260,7 @@ function decodeProtectedHeader(token) {
         if (typeof protectedB64u !== 'string' || !protectedB64u) {
             throw new Error();
         }
-        const result = JSON.parse(decoder.decode(base64url_decode(protectedB64u)));
+        const result = JSON.parse(decoder.decode(base64url(protectedB64u)));
         if (!isObject(result)) {
             throw new Error();
         }
@@ -4304,6 +7271,24 @@ function decodeProtectedHeader(token) {
     }
 }
 
+;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/lib/is_object.js
+function isObjectLike(value) {
+    return typeof value === 'object' && value !== null;
+}
+function is_object_isObject(input) {
+    if (!isObjectLike(input) || Object.prototype.toString.call(input) !== '[object Object]') {
+        return false;
+    }
+    if (Object.getPrototypeOf(input) === null) {
+        return true;
+    }
+    let proto = input;
+    while (Object.getPrototypeOf(proto) !== null) {
+        proto = Object.getPrototypeOf(proto);
+    }
+    return Object.getPrototypeOf(input) === proto;
+}
+
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/util/decode_jwt.js
 
 
@@ -4311,30 +7296,30 @@ function decodeProtectedHeader(token) {
 
 function decodeJwt(jwt) {
     if (typeof jwt !== 'string')
-        throw new JWTInvalid('JWTs must use Compact JWS serialization, JWT must be a string');
+        throw new errors_JWTInvalid('JWTs must use Compact JWS serialization, JWT must be a string');
     const { 1: payload, length } = jwt.split('.');
     if (length === 5)
-        throw new JWTInvalid('Only JWTs using Compact JWS serialization can be decoded');
+        throw new errors_JWTInvalid('Only JWTs using Compact JWS serialization can be decoded');
     if (length !== 3)
-        throw new JWTInvalid('Invalid JWT');
+        throw new errors_JWTInvalid('Invalid JWT');
     if (!payload)
-        throw new JWTInvalid('JWTs must contain a payload');
+        throw new errors_JWTInvalid('JWTs must contain a payload');
     let decoded;
     try {
         decoded = base64url_decode(payload);
     }
     catch (_a) {
-        throw new JWTInvalid('Failed to parse the base64url encoded payload');
+        throw new errors_JWTInvalid('Failed to parse the base64url encoded payload');
     }
     let result;
     try {
-        result = JSON.parse(decoder.decode(decoded));
+        result = JSON.parse(buffer_utils_decoder.decode(decoded));
     }
     catch (_b) {
-        throw new JWTInvalid('Failed to parse the decoded payload as JSON');
+        throw new errors_JWTInvalid('Failed to parse the decoded payload as JSON');
     }
-    if (!isObject(result))
-        throw new JWTInvalid('Invalid JWT Claims Set');
+    if (!is_object_isObject(result))
+        throw new errors_JWTInvalid('Invalid JWT Claims Set');
     return result;
 }
 
@@ -4381,7 +7366,7 @@ async function generateSecret(alg, options) {
         default:
             throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
     }
-    return webcrypto.subtle.generateKey(algorithm, (_a = options === null || options === void 0 ? void 0 : options.extractable) !== null && _a !== void 0 ? _a : false, keyUsages);
+    return crypto.subtle.generateKey(algorithm, (_a = options === null || options === void 0 ? void 0 : options.extractable) !== null && _a !== void 0 ? _a : false, keyUsages);
 }
 function getModulusLengthOption(options) {
     var _a;
@@ -4467,19 +7452,19 @@ async function generateKeyPair(alg, options) {
         default:
             throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
     }
-    return (webcrypto.subtle.generateKey(algorithm, (_b = options === null || options === void 0 ? void 0 : options.extractable) !== null && _b !== void 0 ? _b : false, keyUsages));
+    return (crypto.subtle.generateKey(algorithm, (_b = options === null || options === void 0 ? void 0 : options.extractable) !== null && _b !== void 0 ? _b : false, keyUsages));
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/key/generate_key_pair.js
 
 async function generate_key_pair_generateKeyPair(alg, options) {
-    return generateKeyPair(alg, options);
+    return generate(alg, options);
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/key/generate_secret.js
 
 async function generate_secret_generateSecret(alg, options) {
-    return generateSecret(alg, options);
+    return generate(alg, options);
 }
 
 ;// CONCATENATED MODULE: ./node_modules/jose/dist/browser/index.js

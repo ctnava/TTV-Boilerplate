@@ -1,5 +1,6 @@
-const standardized = require("./std");
-const endpoint = require("./endpoint");
+import axios from "axios";
+import standardized from "./std";
+import endpoint from "./endpoint";
 
 
 function addOptions(options, opts) {
@@ -57,4 +58,4 @@ async function del(route, rawData, auth, opts) {
 }
 
 
-module.exports = { post, get, put, patch, del }
+export default { post, get, put, patch, del };

@@ -1,5 +1,4 @@
-const devServer = (dir, devrig) => {
-    const https = (devrig !== false && devrig !== undefined && devrig !== null);
+const devServer = (dir, https) => {
     return {
       static: `${dir}/public`,
       host: 'localhost',
