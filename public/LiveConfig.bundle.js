@@ -335,13 +335,13 @@ function set(presented, setAuth) {
     };
 
     try {
-      var badTiming = decoded.iat > decoded.exp;
+      var badTiming = decoded.exp < now;
       if (badTiming) throw "expired";
       var roleFailure = !validRoles.includes(decoded.role);
       if (roleFailure) throw "invalid";
       var userIdFailure = decoded.opaque_user_id !== presented.userId;
       if (userIdFailure) throw "forgery";
-      var manipulatedToken = decoded.exp < now;
+      var manipulatedToken = decoded.iat > decoded.exp;
       if (manipulatedToken) throw "manipulation";
     } catch (e) {
       if (e === "forgery" || e === "manipulation") api.req.post("bad_actor", {
@@ -1009,7 +1009,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "7a6efc8c5c9d555127c7"; }
+/******/ 		__webpack_require__.h = function() { return "ab8cba167fe0fdd2674d"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

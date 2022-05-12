@@ -42,13 +42,13 @@ function set(presented, setAuth) {
             permissions: decoded.pubsub_perms
         }
         try {
-            const badTiming = (decoded.iat > decoded.exp);
+            const badTiming = (decoded.exp < now);
             if (badTiming) throw "expired";
             const roleFailure = !validRoles.includes(decoded.role);
             if (roleFailure) throw "invalid";
             const userIdFailure = (decoded.opaque_user_id !== presented.userId);
             if (userIdFailure) throw "forgery";
-            const manipulatedToken = (decoded.exp < now);
+            const manipulatedToken = (decoded.iat > decoded.exp);
             if (manipulatedToken) throw "manipulation";
         } catch (e) {
             if (e === "forgery" || e === "manipulation")
