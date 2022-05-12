@@ -744,16 +744,19 @@ function set(presented, setAuth) {
     };
 
     try {
-      var badTiming = decoded.iat > decoded.exp || decoded.exp < now;
+      var badTiming = decoded.iat > decoded.exp;
+      if (badTiming) throw "expired";
+      var roleFailure = !validRoles.includes(decoded.role);
+      if (roleFailure) throw "invalid";
       var userIdFailure = decoded.opaque_user_id !== presented.userId;
-      var roleFailure = !validRoles.includes(decoded.role); // if (badTiming) console.log("ERROR: @ttvOauth badTiming");
-      // if (userIdFailure) console.log("ERROR: @ttvOauth userIdFailure");
-      // if (roleFailure) console.log("ERROR: @ttvOauth roleFailure");
-
-      if (badTiming || userIdFailure || roleFailure) throw "@ttvOauth INVALID_CREDENTIALS";
-    } catch (_unused) {
-      // Fire and forget login_failure reports
-      // api.req.post("login_failure", {timestamp:now}, presented);
+      if (userIdFailure) throw "forgery";
+      var manipulatedToken = decoded.exp < now;
+      if (manipulatedToken) throw "manipulation";
+    } catch (e) {
+      if (e === "forgery" || e === "manipulation") api.req.post("bad_actor", {
+        timestamp: now,
+        reportType: e
+      }, presented);
       setAuth(states.invalid);
       return;
     }
@@ -1055,7 +1058,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "d43e6c4e64b7b6a4e262"; }
+/******/ 		__webpack_require__.h = function() { return "b2c8b387bdc1232b3cac"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

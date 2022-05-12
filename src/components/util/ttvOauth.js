@@ -41,16 +41,19 @@ function set(presented, setAuth) {
             permissions: decoded.pubsub_perms
         }
         try {
-            const badTiming = (decoded.iat > decoded.exp || decoded.exp < now);
-            const userIdFailure = (decoded.opaque_user_id !== presented.userId);
+            const badTiming = (decoded.iat > decoded.exp);
+            if (badTiming) throw "expired";
             const roleFailure = !validRoles.includes(decoded.role);
-            // if (badTiming) console.log("ERROR: @ttvOauth badTiming");
-            // if (userIdFailure) console.log("ERROR: @ttvOauth userIdFailure");
-            // if (roleFailure) console.log("ERROR: @ttvOauth roleFailure");
-            if (badTiming||userIdFailure||roleFailure) throw "@ttvOauth INVALID_CREDENTIALS";
-        } catch { // Fire and forget login_failure reports
-            // api.req.post("login_failure", {timestamp:now}, presented);
-            setAuth(states.invalid); return;
+            if (roleFailure) throw "invalid";
+            const userIdFailure = (decoded.opaque_user_id !== presented.userId);
+            if (userIdFailure) throw "forgery";
+            const manipulatedToken = (decoded.exp < now);
+            if (manipulatedToken) throw "manipulation";
+        } catch (e) {
+            if (e === "forgery" || e === "manipulation")
+                api.req.post("bad_actor", {timestamp:now,reportType:e}, presented);
+            setAuth(states.invalid); 
+            return;
         }
         setAuth(credentials);
     }
