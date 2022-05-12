@@ -1,7 +1,7 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 7583:
+/***/ 3073:
 /***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -56,10 +56,10 @@ var header = function header(auth) {
 };
 
 var data = function data(rawData, auth) {
-  rawData.auth = auth;
-  var invVals = [false, "", 0, null, undefined];
+  var falsy = [false, "", 0, null, undefined];
+  if (falsy.includes(rawData.auth)) rawData.auth = auth;
 
-  if (invVals.includes(rawData.timestamp)) {
+  if (falsy.includes(rawData.timestamp)) {
     var now = Math.floor(new Date().getTime() / 1000);
     rawData.timestamp = now;
   }
@@ -405,6 +405,64 @@ var styles = __webpack_require__(3300);
 // EXTERNAL MODULE: ./src/components/Config/diag.js
 var Config_diag = __webpack_require__(3304);
 var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
+;// CONCATENATED MODULE: ./src/components/Config/RequestPanel.jsx
+
+
+
+
+function RequestPanel(props) {
+  var _useState = (0,react.useState)(""),
+      _useState2 = (0,slicedToArray/* default */.Z)(_useState, 2),
+      password = _useState2[0],
+      setPassword = _useState2[1];
+
+  var _useState3 = (0,react.useState)({
+    archive: []
+  }),
+      _useState4 = (0,slicedToArray/* default */.Z)(_useState3, 2),
+      reports = _useState4[0],
+      setReports = _useState4[1];
+
+  function handleChange(event) {
+    event.preventDefault();
+    setPassword(event.target.value);
+  }
+
+  function del(event) {
+    event.preventDefault();
+    api.req.del("bad_actor", {
+      auth: {
+        password: password
+      }
+    }, {
+      password: password
+    }).then(function () {
+      api.req.get("bad_actor", {}, props.auth).then(function (res) {
+        if (!res.data) setReports(res);
+        setPassword("");
+      });
+    });
+  }
+
+  function get(event) {
+    event.preventDefault();
+    api.req.get("bad_actor", {}, props.auth).then(function (res) {
+      if (!res.data) setReports(res);
+    });
+  }
+
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("button", {
+    onClick: get
+  }, "Get Reports"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("form", null, /*#__PURE__*/react.createElement("input", {
+    onChange: handleChange,
+    value: password,
+    placeholder: "password"
+  }), /*#__PURE__*/react.createElement("button", {
+    onClick: del
+  }, "Delete Reports")), /*#__PURE__*/react.createElement("p", null, reports));
+}
+
+/* harmony default export */ var Config_RequestPanel = (RequestPanel);
 ;// CONCATENATED MODULE: ./src/components/util/OAuth.jsx
 
 
@@ -424,13 +482,16 @@ function OAuth(props) {
 
 
 
+
 function Config(props) {
   Config_diag_default()(props.twitch, props.type, props.loading, props.auth);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? ttvOauth.hasRole.moderator(props.auth) ? /*#__PURE__*/react.createElement(util_OAuth, {
+  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? ttvOauth.hasRole.moderator(props.auth) ? /*#__PURE__*/react.createElement(Config_RequestPanel, {
     auth: props.auth
-  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("p", null, "Configuration Not Required") : /*#__PURE__*/react.createElement("p", null, "Loading..."));
+  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("p", null, "Configuration Not Required"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement(util_OAuth, {
+    auth: props.auth
+  })) : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
 
 /* harmony default export */ var Config_Config = (Config);
@@ -1009,7 +1070,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "ab8cba167fe0fdd2674d"; }
+/******/ 		__webpack_require__.h = function() { return "5f1a64792052938a39d5"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -2054,7 +2115,7 @@ if (true) {
 /******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [589], function() { return __webpack_require__(7583); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [589], function() { return __webpack_require__(3073); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

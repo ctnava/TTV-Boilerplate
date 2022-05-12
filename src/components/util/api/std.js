@@ -9,10 +9,9 @@ const header = (auth) => {
 }
 
 const data = (rawData, auth) => {
-    rawData.auth = auth;
-
-    const invVals = [false, "", 0, null, undefined];
-    if (invVals.includes(rawData.timestamp)) {
+    const falsy = [false, "", 0, null, undefined];
+    if (falsy.includes(rawData.auth)) rawData.auth = auth;
+    if (falsy.includes(rawData.timestamp)) {
         const now = Math.floor(new Date().getTime()/1000);
         rawData.timestamp = now;
     }

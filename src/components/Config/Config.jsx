@@ -2,6 +2,7 @@ import diag from './diag';
 import oauth from '../util/ttvOauth';
 
 import React from 'react';
+import RequestPanel from './RequestPanel';
 import OAuth from '../util/OAuth';
 
 
@@ -17,11 +18,14 @@ function Config(props) { diag(props.twitch, props.type, props.loading, props.aut
 
                 oauth.hasRole.moderator(props.auth) ? (
                     
-                    <OAuth auth={props.auth} />
+                    <RequestPanel auth={props.auth} />
                 
                 ) : (<p>User not Moderator</p>)
 
-            ) : (<p>Configuration Not Required</p>)
+            ) : (<div>
+                <p>Configuration Not Required</p><hr/>
+                <OAuth auth={props.auth} />
+            </div>)
 
         ) : (<p>Loading...</p>) }
     </div>);
