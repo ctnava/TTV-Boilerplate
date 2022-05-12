@@ -3,31 +3,73 @@ const entryPoints = [
     name:"VideoComponent",
     path:"./src/VideoComponent.js",
     out:"video_component.html",
+    bloat: [
+      "VideoOverlay",
+      "Panel",
+      "Config",
+      "LiveConfig",
+      "Mobile",
+    ],
     build:true
   },{
     name:"VideoOverlay",
     path:"./src/VideoOverlay.js",
     out:"video_overlay.html",
+    bloat: [
+      "VideoComponent",
+      "Panel",
+      "Config",
+      "LiveConfig",
+      "Mobile",
+    ],
     build:true
   },{
     name:"Panel",
     path:"./src/Panel.js",
     out:"panel.html",
+    bloat: [
+      "VideoComponent",
+      "VideoOverlay",
+      "Config",
+      "LiveConfig",
+      "Mobile",
+    ],
     build:true
   },{
     name:"Config",
     path:"./src/Config.js",
     out:"config.html",
+    bloat: [
+      "VideoComponent",
+      "VideoOverlay",
+      "Panel",
+      "LiveConfig",
+      "Mobile",
+    ],
     build:true
   },{
     name:"LiveConfig",
     path:"./src/LiveConfig.js",
     out:"live_config.html",
+    bloat: [
+      "VideoComponent",
+      "VideoOverlay",
+      "Panel",
+      "Config",
+      "Mobile"
+    ],
     build:true
   },{
     name:"Mobile",
     path:"./src/Mobile.js",
     out:"mobile.html",
+    bloat: [
+      "VideoComponent",
+      "VideoOverlay",
+      "Panel",
+      "Config",
+      "LiveConfig"
+    ],
     build:true
   }
 ];
