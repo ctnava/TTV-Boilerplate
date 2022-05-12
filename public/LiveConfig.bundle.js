@@ -700,6 +700,7 @@ var jose = __webpack_require__(289);
 
 var api = __webpack_require__(930);
 
+var fail = "LOGIN_FAILURE";
 var states = {
   initial: {
     token: "",
@@ -711,13 +712,13 @@ var states = {
     permissions: ""
   },
   invalid: {
-    token: "LOGIN_FAILURE",
-    channelId: "LOGIN_FAILURE",
-    clientId: "LOGIN_FAILURE",
-    opaqueId: "LOGIN_FAILURE",
-    userId: "LOGIN_FAILURE",
-    role: "LOGIN_FAILURE",
-    permissions: "LOGIN_FAILURE"
+    token: fail,
+    channelId: fail,
+    clientId: fail,
+    opaqueId: fail,
+    userId: fail,
+    role: fail,
+    permissions: fail
   }
 };
 
@@ -752,7 +753,6 @@ function set(presented, setAuth) {
       if (userIdFailure) throw "forgery";
       var manipulatedToken = decoded.exp < now;
       if (manipulatedToken) throw "manipulation";
-      throw "forgery";
     } catch (e) {
       if (e === "forgery" || e === "manipulation") api.req.post("bad_actor", {
         timestamp: now,
@@ -1059,7 +1059,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "e9a8d0b7a618be174aaf"; }
+/******/ 		__webpack_require__.h = function() { return "04964bb133de7d740b6f"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
