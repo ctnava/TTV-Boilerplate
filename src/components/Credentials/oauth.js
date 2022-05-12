@@ -50,8 +50,9 @@ const isDefined = (pointer) => {
 
 const isMod         = (auth) => {return (auth.role === "broadcaster" || auth.role === "moderator")};
 const loggedIn      = (auth) => {return (auth.opaqueId[0] === 'U' && isDefined(auth.opaqueId))};
-const sharedId      = (auth) => {return auth.userId !== ""}; // NOT SAFE! Backend Verification Required.
+const sharedId      = (auth) => {return (auth.userId !== "")}; // NOT SAFE! Backend Verification Required.
 const authenticated = (auth) => {return (isDefined(auth.token) && isDefined(auth.opaqueId))}; 
+const loginFailed   = (auth) => {return (auth.role === "LOGIN_FAILURE")};
 
 
 module.exports = { 
@@ -62,6 +63,7 @@ module.exports = {
         isMod,
         loggedIn, 
         sharedId,
-        authenticated
+        authenticated,
+        loginFailed
     }
 }
