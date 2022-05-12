@@ -1,68 +1,55 @@
-const webpack = require("webpack");
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-
-
 const entryPoints = [
   {
     name:"VideoComponent",
     path:"./src/VideoComponent.js",
-    outputHtml:"video_component.html",
+    out:"video_component.html",
     build:true
   },{
     name:"VideoOverlay",
     path:"./src/VideoOverlay.js",
-    outputHtml:"video_overlay.html",
+    out:"video_overlay.html",
     build:true
   },{
     name:"Panel",
     path:"./src/Panel.js",
-    outputHtml:"panel.html",
+    out:"panel.html",
     build:true
   },{
     name:"Config",
     path:"./src/Config.js",
-    outputHtml:"config.html",
+    out:"config.html",
     build:true
   },{
     name:"LiveConfig",
     path:"./src/LiveConfig.js",
-    outputHtml:"live_config.html",
+    out:"live_config.html",
     build:true
   },{
     name:"Mobile",
     path:"./src/Mobile.js",
-    outputHtml:"mobile.html",
+    out:"mobile.html",
     build:true
   }
-]
+];
 
+const rules = [{
+  test: /\.css$/i,
+  use: ["style-loader", "css-loader"]
+},{
+  test: /\.html$/,
+  loader: 'html-loader'
+},{
+  test: /\.(js|jsx)$/i,
+  exclude: /(node_modules|bower_components)/,
+  loader: "babel-loader"
+},{
+  test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
+  type: "asset",
+  loader: "file-loader", 
+  options:{name:"img/[name].[ext]"}
+}];
 
-const configAddons = (mode) => {
-  var entry = {};
-  var plugins = [
-    new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['dist']}),
-    new webpack.HotModuleReplacementPlugin()
-  ];
+const resolve = { extensions: ['*', '.js', '.jsx'] };
+const optimization = { minimize:false };
 
-
-  for (const point in entryPoints) {
-    if (point.build) {
-      entry.name = `./src/${point.name}.js`;
-      if(mode === 'production') {
-        const options = {
-          inject:true,
-          chunks: point.name,
-          template:'./webpack/template.html',
-          filename: point.outputHtml
-        };
-        plugins.push(new HtmlWebpackPlugin(options));
-      }
-    }
-  }
-
-  return { entry, plugins };
-}
-
-
-module.exports = configAddons;
+module.exports = { entryPoints, rules, resolve, optimization };

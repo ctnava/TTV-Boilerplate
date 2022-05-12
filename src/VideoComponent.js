@@ -2,7 +2,7 @@ import React from "react"
 import ReactDOM from 'react-dom/client';
 import TTV from "./components/TTV"
 
-import * as serviceWorker from './serviceWorker';
+import * as serviceWorker from './util/serviceWorker';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
