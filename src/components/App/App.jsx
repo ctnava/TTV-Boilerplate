@@ -1,7 +1,7 @@
 import diag from './diag';
 
 import React from 'react';
-import OAuth from '../Credentials/OAuthDisplay';
+import OAuth from '../util/OAuth';
 
 
 function App(props) { diag(props.twitch, props.type, props.loading, props.visible);

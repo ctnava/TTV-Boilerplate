@@ -1,7 +1,7 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 31:
+/***/ 410:
 /***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13,27 +13,27 @@ var client = __webpack_require__(745);
 // EXTERNAL MODULE: ./src/components/diag.js
 var diag = __webpack_require__(178);
 var diag_default = /*#__PURE__*/__webpack_require__.n(diag);
-// EXTERNAL MODULE: ./src/components/Credentials/oauth.js
-var oauth = __webpack_require__(662);
-var oauth_default = /*#__PURE__*/__webpack_require__.n(oauth);
+// EXTERNAL MODULE: ./src/components/util/ttvOauth.js
+var ttvOauth = __webpack_require__(950);
+var ttvOauth_default = /*#__PURE__*/__webpack_require__.n(ttvOauth);
 // EXTERNAL MODULE: ./src/components/styles.css
 var styles = __webpack_require__(300);
 // EXTERNAL MODULE: ./src/components/Config/diag.js
 var Config_diag = __webpack_require__(304);
 var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
-;// CONCATENATED MODULE: ./src/components/Credentials/OAuthDisplay.jsx
+;// CONCATENATED MODULE: ./src/components/util/OAuth.jsx
 
 
 
 function OAuth(props) {
   // console.log("displaying", props.auth)
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), oauth_default().eval.isMod(props.auth) && /*#__PURE__*/react.createElement("input", {
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), ttvOauth_default().hasRole.moderator(props.auth) && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
   }));
 }
 
-/* harmony default export */ var OAuthDisplay = (OAuth);
+/* harmony default export */ var util_OAuth = (OAuth);
 ;// CONCATENATED MODULE: ./src/components/Config/Config.jsx
 
 
@@ -44,7 +44,7 @@ function Config(props) {
   Config_diag_default()(props.twitch, props.type, props.loading, props.auth);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? oauth_default().eval.isMod(props.auth) ? /*#__PURE__*/react.createElement(OAuthDisplay, {
+  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? ttvOauth_default().hasRole.moderator(props.auth) ? /*#__PURE__*/react.createElement(util_OAuth, {
     auth: props.auth
   }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("p", null, "Configuration Not Required") : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
@@ -62,7 +62,7 @@ function App(props) {
   App_diag_default()(props.twitch, props.type, props.loading, props.visible);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "App - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading && props.visible ? /*#__PURE__*/react.createElement(OAuthDisplay, {
+  }, /*#__PURE__*/react.createElement("h1", null, "App - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading && props.visible ? /*#__PURE__*/react.createElement(util_OAuth, {
     auth: props.auth
   }) : "Loading...");
 }
@@ -99,7 +99,7 @@ function TTV(props) {
 
   var twitch = window.Twitch ? window.Twitch.ext : false;
 
-  var _useState3 = (0,react.useState)((oauth_default()).defaultState),
+  var _useState3 = (0,react.useState)((ttvOauth_default()).states.initial),
       _useState4 = _slicedToArray(_useState3, 2),
       auth = _useState4[0],
       setAuth = _useState4[1];
@@ -119,7 +119,7 @@ function TTV(props) {
   (0,react.useEffect)(function () {
     if (twitch) {
       twitch.onAuthorized(function (credentials) {
-        oauth_default().setToken(credentials, setAuth);
+        ttvOauth_default().set(credentials, setAuth);
 
         if (loading) {
           // additionalSetup();
@@ -225,7 +225,7 @@ window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?
 function register(config) {
   if ( true && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
-    var publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
+    var publicUrl = new URL("MISSING_ENV_VAR".PUBLIC_URL, window.location.href);
 
     if (publicUrl.origin !== window.location.origin) {
       // Our service worker won't work if PUBLIC_URL is on a different origin
@@ -235,7 +235,7 @@ function register(config) {
     }
 
     window.addEventListener('load', function () {
-      var swUrl = "".concat(process.env.PUBLIC_URL, "/service-worker.js");
+      var swUrl = "".concat("MISSING_ENV_VAR".PUBLIC_URL, "/service-worker.js");
 
       if (isLocalhost) {
         // This is running on localhost. Let's check if a service worker still exists or not.
@@ -372,90 +372,6 @@ module.exports = diag;
 
 /***/ }),
 
-/***/ 662:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-var jose = __webpack_require__(289);
-
-var defaultState = {
-  channelId: "",
-  clientId: "",
-  opaqueId: "",
-  userId: "",
-  role: ""
-};
-
-function setToken(credentials, setAuth) {
-  if (credentials.token) {
-    var token = credentials.token; // console.log("PRESENTED: ", credentials);
-
-    var channelId = credentials.channelId;
-    var clientId = credentials.clientId;
-    var opaqueId = credentials.userId;
-    var userId = "";
-    var role = "";
-
-    try {
-      var decoded = jose.decodeJwt(token); // console.log("DECODED: ", decoded);
-
-      if (decoded.iat > decoded.exp || decoded.exp < Math.floor(new Date().getTime() / 1000) || decoded.opaque_user_id !== opaqueId || decoded.channel_id !== channelId || decoded.user_id !== channelId) throw "Invalid Credentials";
-      userId = decoded.user_id;
-      role = decoded.role;
-    } catch (e) {
-      console.log("ERROR:", e);
-      userId = "";
-      role = "LOGIN_FAILURE";
-    }
-
-    setAuth({
-      channelId: channelId,
-      clientId: clientId,
-      opaqueId: opaqueId,
-      userId: userId,
-      role: role
-    });
-  } else return;
-}
-
-var isDefined = function isDefined(pointer) {
-  return pointer !== undefined && pointer !== null && pointer !== false;
-};
-
-var isMod = function isMod(auth) {
-  return auth.role === "broadcaster" || auth.role === "moderator";
-};
-
-var loggedIn = function loggedIn(auth) {
-  return auth.opaqueId[0] === 'U' && isDefined(auth.opaqueId);
-};
-
-var sharedId = function sharedId(auth) {
-  return auth.userId !== "";
-}; // NOT SAFE! Backend Verification Required.
-
-
-var authenticated = function authenticated(auth) {
-  return isDefined(auth.token) && isDefined(auth.opaqueId);
-};
-
-var loginFailed = function loginFailed(auth) {
-  return auth.role === "LOGIN_FAILURE";
-};
-
-module.exports = {
-  defaultState: defaultState,
-  setToken: setToken,
-  eval: {
-    isMod: isMod,
-    loggedIn: loggedIn,
-    sharedId: sharedId,
-    authenticated: authenticated,
-    loginFailed: loginFailed
-  }
-};
-
-/***/ }),
-
 /***/ 178:
 /***/ (function(module) {
 
@@ -471,6 +387,409 @@ var diag = function diag(twitch, type) {
 };
 
 module.exports = diag;
+
+/***/ }),
+
+/***/ 930:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+var base = __webpack_require__(2);
+
+var endpoint = __webpack_require__(547);
+
+var req = __webpack_require__(310);
+
+module.exports = {
+  base: base,
+  endpoint: endpoint,
+  req: req
+};
+
+/***/ }),
+
+/***/ 310:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+
+var standardized = __webpack_require__(774);
+
+var endpoint = __webpack_require__(547);
+
+function addOptions(options, opts) {
+  if (_typeof(opts) === _typeof(options)) return _objectSpread(_objectSpread({}, options), opts);else return options;
+}
+
+function post(_x, _x2, _x3, _x4) {
+  return _post.apply(this, arguments);
+}
+
+function _post() {
+  _post = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(route, rawData, auth, opts) {
+    var _standardized$input, _standardized$input2, url, data, headers, options, res;
+
+    return regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _standardized$input = standardized.input(route, rawData, auth), _standardized$input2 = _slicedToArray(_standardized$input, 3), url = _standardized$input2[0], data = _standardized$input2[1], headers = _standardized$input2[2];
+            options = {
+              headers: headers
+            };
+            if (opts) addOptions(options, opts);
+            _context.next = 5;
+            return axios.post(url, data, options);
+
+          case 5:
+            res = _context.sent;
+            return _context.abrupt("return", res);
+
+          case 7:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _post.apply(this, arguments);
+}
+
+function get(_x5, _x6, _x7) {
+  return _get.apply(this, arguments);
+}
+
+function _get() {
+  _get = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(route, auth, opts) {
+    var url, headers, options, res;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            url = endpoint(route);
+            headers = standardized.header(auth);
+            options = {
+              headers: headers
+            };
+            if (opts) addOptions(options, opts);
+            _context2.next = 6;
+            return axios.get(url, options);
+
+          case 6:
+            res = _context2.sent;
+            return _context2.abrupt("return", res);
+
+          case 8:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2);
+  }));
+  return _get.apply(this, arguments);
+}
+
+function put(_x8, _x9, _x10, _x11) {
+  return _put.apply(this, arguments);
+}
+
+function _put() {
+  _put = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(route, rawData, auth, opts) {
+    var _standardized$input3, _standardized$input4, url, data, headers, options, res;
+
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _standardized$input3 = standardized.input(route, rawData, auth), _standardized$input4 = _slicedToArray(_standardized$input3, 3), url = _standardized$input4[0], data = _standardized$input4[1], headers = _standardized$input4[2];
+            options = {
+              data: data,
+              headers: headers
+            };
+            if (opts) addOptions(options, opts);
+            _context3.next = 5;
+            return axios.put(url, options);
+
+          case 5:
+            res = _context3.sent;
+            return _context3.abrupt("return", res);
+
+          case 7:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3);
+  }));
+  return _put.apply(this, arguments);
+}
+
+function patch(_x12, _x13, _x14, _x15) {
+  return _patch.apply(this, arguments);
+}
+
+function _patch() {
+  _patch = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(route, rawData, auth, opts) {
+    var _standardized$input5, _standardized$input6, url, data, headers, options, res;
+
+    return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            _standardized$input5 = standardized.input(route, rawData, auth), _standardized$input6 = _slicedToArray(_standardized$input5, 3), url = _standardized$input6[0], data = _standardized$input6[1], headers = _standardized$input6[2];
+            options = {
+              data: data,
+              headers: headers
+            };
+            if (opts) addOptions(options, opts);
+            _context4.next = 5;
+            return axios.patch(url, options);
+
+          case 5:
+            res = _context4.sent;
+            return _context4.abrupt("return", res);
+
+          case 7:
+          case "end":
+            return _context4.stop();
+        }
+      }
+    }, _callee4);
+  }));
+  return _patch.apply(this, arguments);
+}
+
+function del(_x16, _x17, _x18, _x19) {
+  return _del.apply(this, arguments);
+}
+
+function _del() {
+  _del = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(route, rawData, auth, opts) {
+    var _standardized$input7, _standardized$input8, url, data, headers, options, res;
+
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            _standardized$input7 = standardized.input(route, rawData, auth), _standardized$input8 = _slicedToArray(_standardized$input7, 3), url = _standardized$input8[0], data = _standardized$input8[1], headers = _standardized$input8[2];
+            options = {
+              data: data,
+              headers: headers
+            };
+            if (opts) addOptions(options, opts);
+            _context5.next = 5;
+            return axios.del(url, options);
+
+          case 5:
+            res = _context5.sent;
+            return _context5.abrupt("return", res);
+
+          case 7:
+          case "end":
+            return _context5.stop();
+        }
+      }
+    }, _callee5);
+  }));
+  return _del.apply(this, arguments);
+}
+
+module.exports = {
+  post: post,
+  get: get,
+  put: put,
+  patch: patch,
+  del: del
+};
+
+/***/ }),
+
+/***/ 2:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+var base = {
+  URI: "http://localhost:4000/",
+  header: {
+    'Content-Type': 'application/json'
+  }
+};
+/* harmony default export */ __webpack_exports__["default"] = (base);
+
+/***/ }),
+
+/***/ 547:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+var base = __webpack_require__(2);
+
+var endpoint = function endpoint(route) {
+  if (base.URI[base.URI.length - 1] === "/") return "".concat(base.URI).concat(route);else return "".concat(base.URI, "/").concat(route);
+};
+
+module.exports = endpoint;
+
+/***/ }),
+
+/***/ 774:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+var base = __webpack_require__(2);
+
+var endpoint = __webpack_require__(547);
+
+var header = function header(auth) {
+  var stdHeader = base.header;
+  stdHeader['Authorization'] = "Bearer ".concat(auth.token);
+  return stdHeader;
+};
+
+var data = function data(rawData, auth) {
+  rawData.auth = auth;
+  var invVals = [false, "", 0, null, undefined];
+
+  if (invVals.includes(rawData.timestamp)) {
+    var now = Math.floor(new Date().getTime() / 1000);
+    rawData.timestamp = now;
+  }
+
+  return rawData;
+};
+
+var input = function input(route, rawData, auth) {
+  var url = endpoint(route);
+  var stdData = data(rawData, auth);
+  var stdHeaders = header(auth);
+  return [url, stdData, stdHeaders];
+};
+
+module.exports = {
+  header: header,
+  data: data,
+  input: input
+};
+
+/***/ }),
+
+/***/ 950:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+var jose = __webpack_require__(289);
+
+var api = __webpack_require__(930);
+
+var states = {
+  initial: {
+    token: "",
+    channelId: "",
+    clientId: "",
+    opaqueId: "",
+    userId: "",
+    role: "",
+    permissions: ""
+  },
+  invalid: {
+    token: "LOGIN_FAILURE",
+    channelId: "LOGIN_FAILURE",
+    clientId: "LOGIN_FAILURE",
+    opaqueId: "LOGIN_FAILURE",
+    userId: "LOGIN_FAILURE",
+    role: "LOGIN_FAILURE",
+    permissions: "LOGIN_FAILURE"
+  }
+};
+var validRoles = ["broadcaster", "viewer", "moderator"];
+var unexpectedValues = ["", null, undefined, false, " "];
+
+function set(presented, setAuth) {
+  var credentials;
+  var now; // console.log("PRESENTED: ", presented);
+
+  if (presented.token) {
+    try {
+      now = Math.floor(new Date().getTime() / 1000);
+      var decoded = jose.decodeJwt(presented.token); // console.log("DECODED: ", decoded);
+
+      if ( // BAD TIMING
+      decoded.iat > decoded.exp || decoded.exp < now || // CREDENTIAL MISMATCH
+      decoded.opaque_user_id !== presented.opaqueId || decoded.channel_id !== presented.channelId || // DECODE FAILURE @ USER ID
+      decoded.user_id !== presented.channelId || unexpectedValues.includes(decoded.user_id) || // DECODE FAILURE @ ROLE
+      !validRoles.includes(decoded.role)) throw "INVALID_CREDENTIALS";
+      credentials = {
+        token: presented.token,
+        clientId: presented.clientId,
+        channelId: decoded.channel_id,
+        opaqueId: decoded.opaque_user_id,
+        userId: decoded.user_id,
+        role: decoded.role,
+        permissions: decoded.pubsub_perms
+      };
+    } catch (e) {
+      console.log("ERROR:", e); // Fire and forget bad reports
+
+      api.req.post("login_failure", {
+        timestamp: now
+      }, presented);
+      setAuth(states.invalid);
+      return;
+    }
+
+    setAuth(credentials);
+  }
+} // login
+
+
+var success = function success(auth) {
+  return auth !== states.initial;
+};
+
+var failure = function failure(auth) {
+  return auth !== states.invalid;
+}; // hasRole
+
+
+var broadcaster = function broadcaster(auth) {
+  return auth.role === "broadcaster";
+};
+
+var moderator = function moderator(auth) {
+  return isBroadcaster(auth) || auth.role === "moderator";
+};
+
+module.exports = {
+  states: states,
+  set: set,
+  login: {
+    success: success,
+    failure: failure
+  },
+  hasRole: {
+    broadcaster: broadcaster,
+    moderator: moderator
+  }
+};
 
 /***/ }),
 
@@ -720,7 +1039,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "49c145a853b5816db92e"; }
+/******/ 		__webpack_require__.h = function() { return "23c26995f47ff1189b4e"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -1765,7 +2084,7 @@ if (true) {
 /******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [174], function() { return __webpack_require__(31); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [174], function() { return __webpack_require__(410); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

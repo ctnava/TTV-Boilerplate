@@ -1,5 +1,5 @@
 import diag from './diag';
-import oauth from './Credentials/oauth';
+import oauth from './util/ttvOauth';
 
 import './styles.css';
 import React, { useState, useEffect } from 'react';
@@ -13,14 +13,14 @@ function TTV(props) { diag(twitch, props.type);
 
     // TTV Extension, States, & Setup Effects
     var twitch = window.Twitch ? window.Twitch.ext : false;
-    const [auth, setAuth] = useState(oauth.defaultState);
+    const [auth, setAuth] = useState(oauth.states.initial);
     const [theme, setTheme] = useState('light');
     const themeClass = (theme === 'light') ? ('Ext-light') : ('Ext-dark');
     const [visible, setVisible] = useState(true);
     useEffect(() => { 
         if (twitch) {
             twitch.onAuthorized((credentials)=>{
-                oauth.setToken(credentials, setAuth);
+                oauth.set(credentials, setAuth);
                 if (loading) {
                     // additionalSetup();
                     setLoading(false);

@@ -1,8 +1,8 @@
 import diag from './diag';
-import ouath from '../Credentials/oauth';
+import oauth from '../util/ttvOauth';
 
 import React from 'react';
-import OAuth from '../Credentials/OAuthDisplay';
+import OAuth from '../util/OAuth';
 
 
 function Config(props) { diag(props.twitch, props.type, props.loading, props.auth);
@@ -15,7 +15,7 @@ function Config(props) { diag(props.twitch, props.type, props.loading, props.aut
 
             props.type === "Live" ? (
 
-                ouath.eval.isMod(props.auth) ? (
+                oauth.hasRole.moderator(props.auth) ? (
                     
                     <OAuth auth={props.auth} />
                 

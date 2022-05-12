@@ -1,5 +1,6 @@
 const webpack = require("webpack");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { entryPoints } = require("./input");
 
@@ -7,6 +8,7 @@ const { entryPoints } = require("./input");
 function inputs(mode) {
     var entry = {};
     var plugins = [
+        new Dotenv(),
         new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['dist']}),
         new webpack.HotModuleReplacementPlugin()
     ];

@@ -29,16 +29,16 @@
     "html-webpack-plugin": "^5.5.0",
     "jest": "^28.1.0",
     "mini-css-extract-plugin": "^2.6.0",
-    "react-test-renderer": "^18.1.0",
     "sinon": "^14.0.0",
     "style-loader": "^3.3.1",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.9.0",
-    "workbox-webpack-plugin": "^6.5.3"
+    "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "dotenv-webpack": "^7.1.0",
     "jose": "^4.8.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"

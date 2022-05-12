@@ -1,5 +1,5 @@
 import React from 'react';
-import oauth from './oauth';
+import oauth from './ttvOauth';
 
 
 function OAuth(props) {
@@ -18,7 +18,7 @@ function OAuth(props) {
 
         <hr/>
 
-        {oauth.eval.isMod(props.auth) && (<input value='mod verification button' type='button'/>)}
+        {oauth.hasRole.moderator(props.auth) && (<input value='mod verification button' type='button'/>)}
 
     </div>);
 }
