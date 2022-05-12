@@ -23,7 +23,7 @@
 
 # api
 /temp
-
+/api/env.json
 
 # Twitch
 Project.json
