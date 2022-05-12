@@ -20,10 +20,8 @@ function TTV(props) { diag(twitch, props.type);
     useEffect(() => { 
         if (twitch) {
             twitch.onAuthorized((credentials)=>{
-                twitch.rig.log("Logging In...");
                 oauth.setToken(credentials, setAuth);
                 if (loading) {
-                    twitch.rig.log("Logged In!");
                     // additionalSetup();
                     setLoading(false);
                 } 

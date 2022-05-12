@@ -3,7 +3,7 @@ import oauth from './oauth';
 
 
 function OAuth(props) {
-    console.log("displaying", props.auth)
+    // console.log("displaying", props.auth)
     return (<div>
 
         <h3>TTV USER CREDENTIALS</h3>

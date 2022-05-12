@@ -6,7 +6,7 @@
     "test": "jest",
     "build": "webpack --mode=production",
     "start": "webpack-dev-server --mode=development",
-    "host": "webpack-dev-server --mode=development --devrig",
+    "host": "webpack-dev-server --mode=development --env devrig",
     "watch": "webpack --watch",
     "serve": "webpack serve --mode",
     "help": "webpack --help"

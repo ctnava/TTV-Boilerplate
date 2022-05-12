@@ -11,10 +11,9 @@ const defaultState = {
 
 
 function setToken(credentials, setAuth) {
-    // console.log("PRESENTED: ", credentials);
     if (credentials.token){
         let token = credentials.token;
-
+        // console.log("PRESENTED: ", credentials);
         let channelId = credentials.channelId;
         let clientId = credentials.clientId;
         let opaqueId = credentials.userId;
@@ -23,7 +22,6 @@ function setToken(credentials, setAuth) {
         try {
             let decoded = jose.decodeJwt(token);
             // console.log("DECODED: ", decoded);
-
             if (
                 decoded.iat > decoded.exp || 
                 decoded.exp < Math.floor(new Date().getTime()/1000) ||

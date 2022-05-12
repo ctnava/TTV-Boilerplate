@@ -26,7 +26,7 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 
 
 function OAuth(props) {
-  console.log("displaying", props.auth);
+  // console.log("displaying", props.auth)
   return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), oauth_default().eval.isMod(props.auth) && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
@@ -119,12 +119,10 @@ function TTV(props) {
   (0,react.useEffect)(function () {
     if (twitch) {
       twitch.onAuthorized(function (credentials) {
-        twitch.rig.log("Logging In...");
         oauth_default().setToken(credentials, setAuth);
 
         if (loading) {
-          twitch.rig.log("Logged In!"); // additionalSetup();
-
+          // additionalSetup();
           setLoading(false);
         }
       });
@@ -388,9 +386,9 @@ var defaultState = {
 };
 
 function setToken(credentials, setAuth) {
-  // console.log("PRESENTED: ", credentials);
   if (credentials.token) {
-    var token = credentials.token;
+    var token = credentials.token; // console.log("PRESENTED: ", credentials);
+
     var channelId = credentials.channelId;
     var clientId = credentials.clientId;
     var opaqueId = credentials.userId;
@@ -440,6 +438,10 @@ var authenticated = function authenticated(auth) {
   return isDefined(auth.token) && isDefined(auth.opaqueId);
 };
 
+var loginFailed = function loginFailed(auth) {
+  return auth.role === "LOGIN_FAILURE";
+};
+
 module.exports = {
   defaultState: defaultState,
   setToken: setToken,
@@ -447,7 +449,8 @@ module.exports = {
     isMod: isMod,
     loggedIn: loggedIn,
     sharedId: sharedId,
-    authenticated: authenticated
+    authenticated: authenticated,
+    loginFailed: loginFailed
   }
 };
 
@@ -717,7 +720,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "5eb4a40cf886c8a0bdd2"; }
+/******/ 		__webpack_require__.h = function() { return "843178f59ca706f291ee"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

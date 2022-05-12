@@ -5,6 +5,7 @@ const generate = require("./webpack/generate");
 module.exports = (env, argv) => {
   const { entry, plugins } = generate.inputs(argv.mode);
   const output = generate.outputs(__dirname);
+  const devrig = (env.devrig === true);
 
   var config = {
     module: {rules},
@@ -28,7 +29,7 @@ module.exports = (env, argv) => {
         }
       }
     }
-  } else {config.devServer = server(__dirname, argv.devrig)}
+  } else {config.devServer = server(__dirname, devrig)}
 
   return config;
 };
