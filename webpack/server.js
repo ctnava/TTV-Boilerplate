@@ -1,5 +1,5 @@
 const devServer = (dir, devrig) => {
-    const https = (devrig !== false && devrig !== undefined && devrig !== null);
+    const https = !(devrig !== false && devrig !== undefined && devrig !== null);
     return {
       static: `${dir}/public`,
       host: devrig ? 'localhost.rig.twitch.tv' : 'localhost',
