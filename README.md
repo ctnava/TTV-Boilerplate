@@ -10,6 +10,13 @@ To pack up for deployment, use ```yarn build``` to populate "./dist".
 
 Tests are coming soon.
 
+## Dotenv
+
+Required Values
+```
+BACKEND_BASE_URI=http://localhost:${portNumber}/
+```
+
 ## Project Settings
 
 ### Base URI

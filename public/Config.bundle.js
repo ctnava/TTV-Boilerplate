@@ -27,7 +27,7 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 
 function OAuth(props) {
   // console.log("displaying", props.auth)
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), ttvOauth_default().hasRole.moderator(props.auth) && /*#__PURE__*/react.createElement("input", {
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", ttvOauth_default().user.isIdentified(props.auth) ? props.auth.userId : "hidden"), /*#__PURE__*/react.createElement("li", null, "loginStatus: ", ttvOauth_default().user.isLoggedIn(props.auth).toString()), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), ttvOauth_default().hasRole.moderator(props.auth) && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
   }));
@@ -720,45 +720,57 @@ var states = {
     permissions: "LOGIN_FAILURE"
   }
 };
-var validRoles = ["broadcaster", "viewer", "moderator"];
-var unexpectedValues = ["", null, undefined, false, " "];
 
 function set(presented, setAuth) {
   var credentials;
   var now; // console.log("PRESENTED: ", presented);
 
+  var validRoles = ["broadcaster", "viewer", "moderator"];
+
   if (presented.token) {
+    now = Math.floor(new Date().getTime() / 1000);
+    var decoded = jose.decodeJwt(presented.token); // console.log("DECODED: ", decoded);
+
+    credentials = {
+      token: presented.token,
+      clientId: presented.clientId,
+      channelId: decoded.channel_id,
+      // presented.channelId
+      opaqueId: decoded.opaque_user_id,
+      // presented.userId
+      userId: decoded.user_id,
+      role: decoded.role,
+      permissions: decoded.pubsub_perms
+    };
+
     try {
-      now = Math.floor(new Date().getTime() / 1000);
-      var decoded = jose.decodeJwt(presented.token); // console.log("DECODED: ", decoded);
+      var badTiming = decoded.iat > decoded.exp || decoded.exp < now;
+      var userIdFailure = decoded.opaque_user_id !== presented.userId;
+      var roleFailure = !validRoles.includes(decoded.role); // if (badTiming) console.log("ERROR: @ttvOauth badTiming");
+      // if (userIdFailure) console.log("ERROR: @ttvOauth userIdFailure");
+      // if (roleFailure) console.log("ERROR: @ttvOauth roleFailure");
 
-      if ( // BAD TIMING
-      decoded.iat > decoded.exp || decoded.exp < now || // CREDENTIAL MISMATCH
-      decoded.opaque_user_id !== presented.opaqueId || decoded.channel_id !== presented.channelId || // DECODE FAILURE @ USER ID
-      decoded.user_id !== presented.channelId || unexpectedValues.includes(decoded.user_id) || // DECODE FAILURE @ ROLE
-      !validRoles.includes(decoded.role)) throw "INVALID_CREDENTIALS";
-      credentials = {
-        token: presented.token,
-        clientId: presented.clientId,
-        channelId: decoded.channel_id,
-        opaqueId: decoded.opaque_user_id,
-        userId: decoded.user_id,
-        role: decoded.role,
-        permissions: decoded.pubsub_perms
-      };
-    } catch (e) {
-      console.log("ERROR:", e); // Fire and forget bad reports
-
-      api.req.post("login_failure", {
-        timestamp: now
-      }, presented);
+      if (badTiming || userIdFailure || roleFailure) throw "@ttvOauth INVALID_CREDENTIALS";
+    } catch (_unused) {
+      // Fire and forget login_failure reports
+      // api.req.post("login_failure", {timestamp:now}, presented);
       setAuth(states.invalid);
       return;
     }
 
     setAuth(credentials);
   }
-} // login
+}
+
+var unexpectedValues = ["", null, undefined, false, " "]; // user
+
+var isIdentified = function isIdentified(auth) {
+  return !unexpectedValues.includes(auth.userId);
+};
+
+var isLoggedIn = function isLoggedIn(auth) {
+  return auth.opaqueId[0] === "U";
+}; // login
 
 
 var success = function success(auth) {
@@ -775,12 +787,16 @@ var broadcaster = function broadcaster(auth) {
 };
 
 var moderator = function moderator(auth) {
-  return isBroadcaster(auth) || auth.role === "moderator";
+  return broadcaster(auth) || auth.role === "moderator";
 };
 
 module.exports = {
   states: states,
   set: set,
+  user: {
+    isIdentified: isIdentified,
+    isLoggedIn: isLoggedIn
+  },
   login: {
     success: success,
     failure: failure
@@ -1039,7 +1055,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "23c26995f47ff1189b4e"; }
+/******/ 		__webpack_require__.h = function() { return "d43e6c4e64b7b6a4e262"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

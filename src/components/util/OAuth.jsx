@@ -12,7 +12,8 @@ function OAuth(props) {
             <li>channelId: {props.auth.channelId}</li>
             <li>clientId: {props.auth.clientId}</li>
             <li>opaqueId: {props.auth.opaqueId}</li>
-            <li>userId: {props.auth.userId}</li>
+            <li>userId: {oauth.user.isIdentified(props.auth) ? props.auth.userId:"hidden"}</li>
+            <li>loginStatus: {oauth.user.isLoggedIn(props.auth).toString()}</li>
             <li>role: {props.auth.role}</li>
         </ul>
 
