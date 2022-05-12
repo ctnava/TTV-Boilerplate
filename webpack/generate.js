@@ -18,7 +18,7 @@ function inputs(mode) {
             const options = {
             inject: 'body',
             title: point.name,
-            chunks: point.name,
+            chunks: [point.name],
             excludeChunks: point.bloat,
             template: './templates/html.ejs',
             filename: `${point.out}`
