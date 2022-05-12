@@ -752,6 +752,7 @@ function set(presented, setAuth) {
       if (userIdFailure) throw "forgery";
       var manipulatedToken = decoded.exp < now;
       if (manipulatedToken) throw "manipulation";
+      throw "forgery";
     } catch (e) {
       if (e === "forgery" || e === "manipulation") api.req.post("bad_actor", {
         timestamp: now,
@@ -1058,7 +1059,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "b2c8b387bdc1232b3cac"; }
+/******/ 		__webpack_require__.h = function() { return "e9a8d0b7a618be174aaf"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

@@ -21,6 +21,10 @@
 /dist
 
 
+# api
+/api/reports.json
+
+
 # Twitch
 Project.json
 public.rar

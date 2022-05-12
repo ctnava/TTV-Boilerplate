@@ -14,7 +14,9 @@ Tests are coming soon.
 
 Required Values
 ```
-BACKEND_BASE_URI=http://localhost:${portNumber}/
+BACKEND_BASE_URI=http://localhost:4000/
+BACKEND_PORT=4000
+BACKEND_SECRET=anythingYouWantReally
 ```
 
 ## Project Settings

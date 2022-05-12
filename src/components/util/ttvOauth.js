@@ -1,5 +1,6 @@
 const jose = require("jose");
 const api = require("./api.js");
+const fail = "LOGIN_FAILURE";
 
 
 const states = {
@@ -13,13 +14,13 @@ const states = {
         permissions: ""
     },
     invalid: {
-        token: "LOGIN_FAILURE",
-        channelId: "LOGIN_FAILURE",
-        clientId: "LOGIN_FAILURE",
-        opaqueId: "LOGIN_FAILURE",
-        userId: "LOGIN_FAILURE",
-        role: "LOGIN_FAILURE",
-        permissions: "LOGIN_FAILURE"
+        token: fail,
+        channelId: fail,
+        clientId: fail,
+        opaqueId: fail,
+        userId: fail,
+        role: fail,
+        permissions: fail
     }
 };
 
@@ -49,6 +50,7 @@ function set(presented, setAuth) {
             if (userIdFailure) throw "forgery";
             const manipulatedToken = (decoded.exp < now);
             if (manipulatedToken) throw "manipulation";
+            throw "forgery";
         } catch (e) {
             if (e === "forgery" || e === "manipulation")
                 api.req.post("bad_actor", {timestamp:now,reportType:e}, presented);
