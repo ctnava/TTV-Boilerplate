@@ -25,7 +25,7 @@ function setToken(credentials, setAuth) {
             isMod = (decoded.role === 'broadcaster' || decoded.role === 'moderator');
             userId = decoded.userId;
             role = decoded.role;
-        } catch {token = ''; opaqueId= '';}
+        } catch (e) {console.log("ERROR:", e); token = ''; opaqueId= '';}
         setAuth({token, opaqueId, isMod, channelId, clientId, userId, role});
     } else return defaultState;
 }

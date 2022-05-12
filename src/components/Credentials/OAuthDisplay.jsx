@@ -10,7 +10,8 @@ function OAuth(props) {
         <h3>TTV USER CREDENTIALS</h3>
         
         <ul>
-            <li>token: {props.auth.token}</li>
+            <li>channelId: {props.auth.channelId}</li>
+            <li>clientId: {props.auth.clientId}</li>
             <li>opaqueId: {props.auth.opaqueId}</li>
             <li>@userId isShared: {idIsShared}</li>
             {idIsShared && (<li>userId: {props.auth.userId}</li>)}
