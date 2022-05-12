@@ -4,15 +4,16 @@ import oauth from './oauth';
 
 function OAuth(props) {
     const idIsShared = oauth.eval.sharedId(props.auth);
+    console.log("displaying", props.auth)
     return (<div>
 
         <h3>TTV USER CREDENTIALS</h3>
         
         <ul>
             <li>token: {props.auth.token}</li>
-            <li>opaque_id: {props.auth.opaque_id}</li>
-            <li>user_id_shared: {idIsShared}</li>
-            {idIsShared && (<li>user_id: {props.auth.user_id}</li>)}
+            <li>opaqueId: {props.auth.opaqueId}</li>
+            <li>@userId isShared: {idIsShared}</li>
+            {idIsShared && (<li>userId: {props.auth.userId}</li>)}
             <li>isModerator: {props.auth.isMod}</li>
         </ul>
 

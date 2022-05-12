@@ -27,7 +27,8 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 
 function OAuth(props) {
   var idIsShared = oauth_default().eval.sharedId(props.auth);
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "token: ", props.auth.token), /*#__PURE__*/react.createElement("li", null, "opaque_id: ", props.auth.opaque_id), /*#__PURE__*/react.createElement("li", null, "user_id_shared: ", idIsShared), idIsShared && /*#__PURE__*/react.createElement("li", null, "user_id: ", props.auth.user_id), /*#__PURE__*/react.createElement("li", null, "isModerator: ", props.auth.isMod)), /*#__PURE__*/react.createElement("hr", null), props.auth.isMod && /*#__PURE__*/react.createElement("input", {
+  console.log("displaying", props.auth);
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "token: ", props.auth.token), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "@userId isShared: ", idIsShared), idIsShared && /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "isModerator: ", props.auth.isMod)), /*#__PURE__*/react.createElement("hr", null), props.auth.isMod && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
   }));
@@ -118,10 +119,12 @@ function TTV(props) {
   (0,react.useEffect)(function () {
     if (twitch) {
       twitch.onAuthorized(function (credentials) {
-        oauth_default().setToken(credentials.token, credentials.userId, setAuth);
+        twitch.rig.log("Setting Token...");
+        oauth_default().setToken(credentials, setAuth);
 
         if (loading) {
-          // additionalSetup();
+          twitch.rig.log("Token Set!"); // additionalSetup();
+
           setLoading(false);
         }
       });
@@ -137,7 +140,7 @@ function TTV(props) {
           twitch.rig.log("New PubSub message!\n".concat(target, "\n").concat(contentType, "\n").concat(body)); // otherActions(target, contentType, body);
         });
         return twitch.unlisten('broadcast', function () {
-          console.log('successfully unlistened');
+          twitch.rig.log('successfully unlistened');
         });
       }
     }
@@ -376,37 +379,48 @@ module.exports = diag;
 
 var defaultState = {
   token: "",
-  opaque_id: "",
-  user_id: undefined,
+  opaqueId: "",
   isMod: false,
-  role: undefined
+  channelId: "",
+  clientId: "",
+  userId: "",
+  role: ""
 };
 
-function setToken(tkn, id, setAuth) {
-  var token = tkn;
-  var opaque_id = id;
-  var isMod = false;
-  var role = "";
-  var user_id = "";
+function setToken(credentials, setAuth) {
+  if (credentials.token) {
+    var token = credentials.token;
+    var opaqueId = credentials.userId;
+    var isMod = false;
+    var channelId = credentials.channelId;
+    var clientId = credentials.clientId;
+    var userId = "";
+    var role = "";
 
-  try {
-    var decoded = (__webpack_require__(423).decode)(token);
+    try {
+      console.log(credentials);
 
-    isMod = decoded.role === 'broadcaster' || decoded.role === 'moderator';
-    user_id = decoded.user_id;
-    role = decoded.role;
-  } catch (_unused) {
-    token = '';
-    opaque_id = '';
-  }
+      var decoded = (__webpack_require__(423).decode)(token);
 
-  setAuth({
-    token: token,
-    opaque_id: opaque_id,
-    user_id: user_id,
-    isMod: isMod,
-    role: role
-  });
+      console.log(decoded);
+      isMod = decoded.role === 'broadcaster' || decoded.role === 'moderator';
+      userId = decoded.userId;
+      role = decoded.role;
+    } catch (_unused) {
+      token = '';
+      opaqueId = '';
+    }
+
+    setAuth({
+      token: token,
+      opaqueId: opaqueId,
+      isMod: isMod,
+      channelId: channelId,
+      clientId: clientId,
+      userId: userId,
+      role: role
+    });
+  } else return defaultState;
 }
 
 var isDefined = function isDefined(pointer) {
@@ -414,16 +428,16 @@ var isDefined = function isDefined(pointer) {
 };
 
 var loggedIn = function loggedIn(auth) {
-  return auth.opaque_id[0] === 'U' && isDefined(auth.opaque_id);
+  return auth.opaqueId[0] === 'U' && isDefined(auth.opaqueId);
 };
 
 var sharedId = function sharedId(auth) {
-  return !!auth.user_id;
+  return !!auth.userId;
 }; // NOT SAFE! Backend Verification Required.
 
 
 var authenticated = function authenticated(auth) {
-  return isDefined(auth.token) && isDefined(auth.opaque_id);
+  return isDefined(auth.token) && isDefined(auth.opaqueId);
 };
 
 module.exports = {
@@ -434,11 +448,7 @@ module.exports = {
     sharedId: sharedId,
     authenticated: authenticated
   }
-}; // const getToken = (auth) => {return auth.token};
-// const getOpaqueId = (auth) => {return auth.opaque_id};
-// const getUserId = (auth) => {return auth.user_id};
-// const isModerator = (auth) => {return auth.isMod};
-// const getRole = (auth) => {return auth.role};
+};
 
 /***/ }),
 
@@ -706,7 +716,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "f8fd4fd7d0ca0925e57b"; }
+/******/ 		__webpack_require__.h = function() { return "b7cacf18f28a6efcfa26"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -729,7 +739,7 @@ if (true) {
 /******/ 	/* webpack/runtime/load script */
 /******/ 	!function() {
 /******/ 		var inProgress = {};
-/******/ 		var dataWebpackPrefix = "my-webpack-project:";
+/******/ 		var dataWebpackPrefix = "ttv-boilerplate:";
 /******/ 		// loadScript function to load a script via script tag
 /******/ 		__webpack_require__.l = function(url, done, key, chunkId) {
 /******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
@@ -1240,7 +1250,7 @@ if (true) {
 /******/ 			});
 /******/ 		}
 /******/ 		
-/******/ 		self["webpackHotUpdatemy_webpack_project"] = function(chunkId, moreModules, runtime) {
+/******/ 		self["webpackHotUpdatettv_boilerplate"] = function(chunkId, moreModules, runtime) {
 /******/ 			for(var moduleId in moreModules) {
 /******/ 				if(__webpack_require__.o(moreModules, moduleId)) {
 /******/ 					currentUpdate[moduleId] = moreModules[moduleId];
@@ -1736,7 +1746,7 @@ if (true) {
 /******/ 			return __webpack_require__.O(result);
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkmy_webpack_project"] = self["webpackChunkmy_webpack_project"] || [];
+/******/ 		var chunkLoadingGlobal = self["webpackChunkttv_boilerplate"] = self["webpackChunkttv_boilerplate"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	}();

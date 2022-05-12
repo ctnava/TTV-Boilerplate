@@ -1,27 +1,33 @@
 const defaultState = {
     token: "",
-    opaque_id: "",
-    user_id: undefined,
+    opaqueId: "",
     isMod: false,
-    role: undefined
+    channelId: "",
+    clientId: "",
+    userId: "",
+    role: ""
 };
 
 
-function setToken(tkn, id, setAuth) {
-    let token = tkn;
-    let opaque_id = id;
-    let isMod = false;
-    let role = "";
-    let user_id = "";
-
-    try {
-        let decoded = require('jose').decode(token)
-        isMod = (decoded.role === 'broadcaster' || decoded.role === 'moderator');
-        user_id = decoded.user_id;
-        role = decoded.role;
-    } catch {token = ''; opaque_id= '';}
-    
-    setAuth({token, opaque_id, user_id, isMod, role});
+function setToken(credentials, setAuth) {
+    if (credentials.token){
+        let token = credentials.token;
+        let opaqueId = credentials.userId;
+        let isMod = false;
+        let channelId = credentials.channelId;
+        let clientId = credentials.clientId;
+        let userId = "";
+        let role = "";
+        try {
+            console.log(credentials);
+            let decoded = require('jose').decode(token);
+            console.log(decoded);
+            isMod = (decoded.role === 'broadcaster' || decoded.role === 'moderator');
+            userId = decoded.userId;
+            role = decoded.role;
+        } catch {token = ''; opaqueId= '';}
+        setAuth({token, opaqueId, isMod, channelId, clientId, userId, role});
+    } else return defaultState;
 }
 
 
@@ -32,9 +38,9 @@ const isDefined = (pointer) => {
         (pointer !== false)
     );
 };
-const loggedIn      = (auth) => {return (auth.opaque_id[0] === 'U' && isDefined(auth.opaque_id))};
-const sharedId      = (auth) => {return !!auth.user_id}; // NOT SAFE! Backend Verification Required.
-const authenticated = (auth) => {return (isDefined(auth.token) && isDefined(auth.opaque_id))}; 
+const loggedIn      = (auth) => {return (auth.opaqueId[0] === 'U' && isDefined(auth.opaqueId))};
+const sharedId      = (auth) => {return !!auth.userId}; // NOT SAFE! Backend Verification Required.
+const authenticated = (auth) => {return (isDefined(auth.token) && isDefined(auth.opaqueId))}; 
 
 
 module.exports = { 
@@ -47,10 +53,3 @@ module.exports = {
         authenticated
     }
 }
-
-
-// const getToken = (auth) => {return auth.token};
-// const getOpaqueId = (auth) => {return auth.opaque_id};
-// const getUserId = (auth) => {return auth.user_id};
-// const isModerator = (auth) => {return auth.isMod};
-// const getRole = (auth) => {return auth.role};

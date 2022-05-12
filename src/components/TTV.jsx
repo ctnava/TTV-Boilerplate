@@ -20,8 +20,10 @@ function TTV(props) { diag(twitch, props.type);
     useEffect(() => { 
         if (twitch) {
             twitch.onAuthorized((credentials)=>{
-                oauth.setToken(credentials.token, credentials.userId, setAuth);
-                if(loading){
+                twitch.rig.log("Setting Token...");
+                oauth.setToken(credentials, setAuth);
+                if (loading) {
+                    twitch.rig.log("Token Set!");
                     // additionalSetup();
                     setLoading(false);
                 }
@@ -37,7 +39,7 @@ function TTV(props) { diag(twitch, props.type);
                     // otherActions(target, contentType, body);
                 });
 
-                return twitch.unlisten('broadcast', () => {console.log('successfully unlistened')});
+                return twitch.unlisten('broadcast', () => {twitch.rig.log('successfully unlistened')});
             }
         }
     }, [loading]);
