@@ -3,7 +3,6 @@ import oauth from './oauth';
 
 
 function OAuth(props) {
-    const idIsShared = oauth.eval.sharedId(props.auth);
     console.log("displaying", props.auth)
     return (<div>
 
@@ -13,14 +12,13 @@ function OAuth(props) {
             <li>channelId: {props.auth.channelId}</li>
             <li>clientId: {props.auth.clientId}</li>
             <li>opaqueId: {props.auth.opaqueId}</li>
-            <li>@userId isShared: {idIsShared}</li>
-            {idIsShared && (<li>userId: {props.auth.userId}</li>)}
+            <li>userId: {props.auth.userId}</li>
             <li>role: {props.auth.role}</li>
         </ul>
 
         <hr/>
 
-        {props.auth.isMod && (<input value='mod verification button' type='button'/>)}
+        {oauth.eval.isMod(props.auth) && (<input value='mod verification button' type='button'/>)}
 
     </div>);
 }

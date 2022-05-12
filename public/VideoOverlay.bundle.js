@@ -26,9 +26,8 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 
 
 function OAuth(props) {
-  var idIsShared = oauth_default().eval.sharedId(props.auth);
   console.log("displaying", props.auth);
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "@userId isShared: ", idIsShared), idIsShared && /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), props.auth.isMod && /*#__PURE__*/react.createElement("input", {
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "TTV USER CREDENTIALS"), /*#__PURE__*/react.createElement("ul", null, /*#__PURE__*/react.createElement("li", null, "channelId: ", props.auth.channelId), /*#__PURE__*/react.createElement("li", null, "clientId: ", props.auth.clientId), /*#__PURE__*/react.createElement("li", null, "opaqueId: ", props.auth.opaqueId), /*#__PURE__*/react.createElement("li", null, "userId: ", props.auth.userId), /*#__PURE__*/react.createElement("li", null, "role: ", props.auth.role)), /*#__PURE__*/react.createElement("hr", null), oauth_default().eval.isMod(props.auth) && /*#__PURE__*/react.createElement("input", {
     value: "mod verification button",
     type: "button"
   }));
@@ -40,11 +39,12 @@ function OAuth(props) {
 
 
 
+
 function Config(props) {
   Config_diag_default()(props.twitch, props.type, props.loading, props.auth);
   return /*#__PURE__*/react.createElement("div", {
     className: "Ext ".concat(props.themeClass)
-  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? props.auth.isMod ? /*#__PURE__*/react.createElement(OAuthDisplay, {
+  }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? oauth_default().eval.isMod(props.auth) ? /*#__PURE__*/react.createElement(OAuthDisplay, {
     auth: props.auth
   }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("p", null, "Configuration Not Required") : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
@@ -119,11 +119,11 @@ function TTV(props) {
   (0,react.useEffect)(function () {
     if (twitch) {
       twitch.onAuthorized(function (credentials) {
-        twitch.rig.log("Setting Token...");
+        twitch.rig.log("Logging In...");
         oauth_default().setToken(credentials, setAuth);
 
         if (loading) {
-          twitch.rig.log("Token Set!"); // additionalSetup();
+          twitch.rig.log("Logged In!"); // additionalSetup();
 
           setLoading(false);
         }
@@ -388,8 +388,7 @@ var defaultState = {
 };
 
 function setToken(credentials, setAuth) {
-  console.log("PRESENTED: ", credentials);
-
+  // console.log("PRESENTED: ", credentials);
   if (credentials.token) {
     var token = credentials.token;
     var channelId = credentials.channelId;
@@ -399,15 +398,15 @@ function setToken(credentials, setAuth) {
     var role = "";
 
     try {
-      var decoded = jose.decodeJwt(token);
-      console.log("DECODED: ", decoded);
-      if (decoded.iat > decoded.exp || decoded.exp < Math.floor(new Date().getTime() / 1000) || decoded.opaque_user_id !== opaqueId || decoded.channel_id !== channelId) throw "Invalid Credentials";
+      var decoded = jose.decodeJwt(token); // console.log("DECODED: ", decoded);
+
+      if (decoded.iat > decoded.exp || decoded.exp < Math.floor(new Date().getTime() / 1000) || decoded.opaque_user_id !== opaqueId || decoded.channel_id !== channelId || decoded.user_id !== channelId) throw "Invalid Credentials";
       userId = decoded.user_id;
       role = decoded.role;
     } catch (e) {
       console.log("ERROR:", e);
-      token = '';
-      opaqueId = '';
+      userId = "";
+      role = "LOGIN_FAILURE";
     }
 
     setAuth({
@@ -417,7 +416,7 @@ function setToken(credentials, setAuth) {
       userId: userId,
       role: role
     });
-  } else return defaultState;
+  } else return;
 }
 
 var isDefined = function isDefined(pointer) {
@@ -718,7 +717,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "e2f4f11b1d1ce7b82dfa"; }
+/******/ 		__webpack_require__.h = function() { return "5eb4a40cf886c8a0bdd2"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

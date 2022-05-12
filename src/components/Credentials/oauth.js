@@ -11,7 +11,7 @@ const defaultState = {
 
 
 function setToken(credentials, setAuth) {
-    console.log("PRESENTED: ", credentials);
+    // console.log("PRESENTED: ", credentials);
     if (credentials.token){
         let token = credentials.token;
 
@@ -22,17 +22,21 @@ function setToken(credentials, setAuth) {
         let role = "";
         try {
             let decoded = jose.decodeJwt(token);
-            console.log("DECODED: ", decoded);
+            // console.log("DECODED: ", decoded);
+
             if (
                 decoded.iat > decoded.exp || 
                 decoded.exp < Math.floor(new Date().getTime()/1000) ||
                 decoded.opaque_user_id !== opaqueId || 
-                decoded.channel_id !== channelId) throw "Invalid Credentials";
+                decoded.channel_id !== channelId ||
+                decoded.user_id !== channelId
+            ) throw "Invalid Credentials";
+
             userId = decoded.user_id;
             role = decoded.role;
-        } catch (e) {console.log("ERROR:", e); token = ''; opaqueId= '';}
+        } catch (e) {console.log("ERROR:", e); userId = ""; role = "LOGIN_FAILURE";}
         setAuth({channelId, clientId, opaqueId, userId, role});
-    } else return defaultState;
+    } else return;
 }
 
 

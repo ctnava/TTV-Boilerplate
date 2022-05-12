@@ -20,13 +20,13 @@ function TTV(props) { diag(twitch, props.type);
     useEffect(() => { 
         if (twitch) {
             twitch.onAuthorized((credentials)=>{
-                twitch.rig.log("Setting Token...");
+                twitch.rig.log("Logging In...");
                 oauth.setToken(credentials, setAuth);
                 if (loading) {
-                    twitch.rig.log("Token Set!");
+                    twitch.rig.log("Logged In!");
                     // additionalSetup();
                     setLoading(false);
-                }
+                } 
             });
         
             twitch.onContext((context, delta) => { if(delta.includes('theme')) setTheme(context.theme)});
