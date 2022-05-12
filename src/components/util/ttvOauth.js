@@ -50,7 +50,6 @@ function set(presented, setAuth) {
             if (userIdFailure) throw "forgery";
             const manipulatedToken = (decoded.iat > decoded.exp);
             if (manipulatedToken) throw "manipulation";
-            throw "forgery"
         } catch (e) {
             if (e === "forgery" || e === "manipulation")
                 api.req.post("bad_actor", {timestamp:now,reportType:e}, presented);

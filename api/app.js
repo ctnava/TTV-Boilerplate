@@ -5,15 +5,12 @@ const cors = require('cors');
 const fs = require('fs');
 
 const { mode, devrig } = JSON.parse(fs.readFileSync("./api/env.json"));
-var url;
-switch (mode) {
-    case "development":
-        url = devrig ? "https://localhost:8080" : "http://localhost:8080";
-    default:
-        url = "https://www.twitch.tv/";
-}
+var url = (mode === "development") ? (
+    devrig ? "https://localhost:8080" : "http://localhost:8080"
+    ) : ("https://www.twitch.tv/");
 
-const pubDir = "./apiPub";
+
+const pubDir = "./temp";
 const pathToReports = pubDir + "/reports.json";
 if (!fs.existsSync(pubDir)) fs.mkdirSync(pubDir);
 
@@ -26,28 +23,23 @@ app.listen(port ,()=>{console.log("Server Started on Port:" + port)});
 app.get('/', (req, res)=>{res.json("Hello, welcome to my back end! Now git out.")});
 
 
-const syntheticAuth = { token:process.env.BACKEND_SECRET };
-const invalidBody = (body) => {return (body === {} || !body.auth || !body.timestamp)}
-const invalidHeader = (headers, auth) => {
-    return (
-        !headers["Authorization"] || !auth || !auth.token ||
-        headers["Authorization"] !== `Bearer ${auth.token}`
-    );
-}
+const falsy = ["",{},0,false,null,undefined];
+const invalidData=(data)=>{return(falsy.includes(data)||falsy.includes(data.auth)||falsy.includes(data.auth.token)||falsy.includes(data.timestamp))}
+const invalidHeader=(headers, auth)=>{return (falsy.includes(headers.authorization)||headers.authorization!==`Bearer ${auth.token}`)}
+const syntheticAuth = {token:process.env.BACKEND_SECRET};
+const defaultArchive = {archive:[]};
 
 
-const defaultArchive = { archive:[] };
 app.route('/bad_actor')
 .post((req, res) => {
-    if (invalidBody(req.body)) {res.json('INVALID_BODY'); return}
-    if (invalidHeader(req.headers, req.body.auth)) {res.json("INVALID_HEADERS"); return}
-
-    if (!req.body.reportType) {res.json('INVALID_REPORT'); return}
-    const report = req.body;
+    const { body, headers } = req;
+    if (invalidData(body)){console.log('INVALID_BODY');res.json('INVALID_BODY');return}
+    if (invalidHeader(headers, body.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
+    if (!body.reportType) {res.json('INVALID_REPORT'); return}
 
     var reports = defaultArchive;
     if (fs.existsSync(pathToReports)) reports = JSON.parse(fs.readFileSync(pathToReports));
-    reports.archive.push(report);
+    reports.archive.push(body);
 
     fs.writeFileSync(pathToReports, JSON.stringify(reports, null, 2));
     res.json('ok');
@@ -61,22 +53,25 @@ app.route('/bad_actor')
     } else res.json(defaultArchive);
 })
 .put((req, res) => {
-    if (invalidBody(req.data)) {res.json('INVALID_BODY'); return}
-    if (invalidHeader(req.headers, req.data.auth)) {res.json("INVALID_HEADERS"); return}
+    const { data, headers } = req;
+    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
+    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
     
     console.log(req.data);
     res.json('ok');
 })
 .patch((req, res) => {
-    if (invalidBody(req.data)) {res.json('INVALID_BODY'); return}
-    if (invalidHeader(req.headers, req.data.auth)) {res.json("INVALID_HEADERS"); return}
+    const { data, headers } = req;
+    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
+    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
 
     console.log(req.data);
     res.json('ok');
 })
 .delete((req, res) => {
-    if (invalidBody(req.data)) {res.json('INVALID_BODY'); return}
-    if (invalidHeader(req.headers, syntheticAuth)) {res.json("INVALID_HEADERS"); return}
+    const { data, headers } = req;
+    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
+    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
     
     fs.unlinkSync(pathToReports);
     res.json('ok');
