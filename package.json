@@ -4,6 +4,7 @@
   "description": "React x TTV Extension Boilerplate",
   "scripts": {
     "test": "jest",
+    "api": "nodemon api",
     "build": "webpack --mode=production",
     "start": "webpack-dev-server --mode=development",
     "host": "webpack-dev-server --mode=development --env devrig",
@@ -42,6 +43,7 @@
     "dotenv-webpack": "^7.1.0",
     "express": "^4.18.1",
     "jose": "^4.8.1",
+    "nodemon": "^2.0.16",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
   },
