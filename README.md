@@ -50,6 +50,6 @@ https://localhost:8080/
 ```
 
 ## Screenshots
-![Screenshot1](http://domain.com/path/to/img.png)
-![Screenshot2](http://domain.com/path/to/img.png)
-![Screenshot3](http://domain.com/path/to/img.png)
+![Screenshot1](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/1.PNG)
+![Screenshot2](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/2.PNG)
+![Screenshot3](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/3.PNG)
