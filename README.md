@@ -48,3 +48,8 @@ https://localhost:8080/
 "frontendFolderName": "public",
 "usingRandomFrontendHostingPort": false
 ```
+
+## Screenshots
+![Screenshot1](http://domain.com/path/to/img.png)
+![Screenshot2](http://domain.com/path/to/img.png)
+![Screenshot3](http://domain.com/path/to/img.png)
