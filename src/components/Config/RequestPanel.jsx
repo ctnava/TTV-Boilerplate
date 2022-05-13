@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../util/api';
+import * as jose from "jose";
 
 
 function RequestPanel(props) {
@@ -13,11 +14,13 @@ function RequestPanel(props) {
 
     function del(event) {
         event.preventDefault();
-        api.req.del("bad_actor", {auth:{password}}, {password})
+        const auth = {token:password};
+        const data = {auth};
+        api.req.del("bad_actor", data, auth)
         .then(()=>{
-            api.req.get("bad_actor", {}, props.auth)
-            .then(res=>{
-                if (!res.data) setReports(res);
+            api.req.get("bad_actor", props.auth)
+            .then(res => {
+                if (res.data) setReports(res.data);
                 setPassword("");
             });
         }); 
@@ -25,11 +28,11 @@ function RequestPanel(props) {
     
     function get(event) {
         event.preventDefault();
-        api.req.get("bad_actor", {}, props.auth).then(res=>{if (!res.data) setReports(res)});
+        api.req.get("bad_actor", props.auth)
+        .then(res=>{if (res.data) setReports(res.data)});
     }
 
     return (<div>
-    <button onClick={get}>Get Reports</button><hr/>
     <form>
         <input
           onChange={handleChange}
@@ -38,7 +41,22 @@ function RequestPanel(props) {
         />
         <button onClick={del}>Delete Reports</button>
     </form>
-    <p>{reports}</p>
+    <hr/>
+    <button onClick={get}>Get Reports</button>
+    {reports.archive.length > 0 && (<div>
+        <h3>Reports</h3>
+        <ul>
+            {reports.archive.map(report =>
+            <li>
+                <span>{(new Date(report.timestamp * 1000)).toString()} || {report.reportType}</span><br/>
+                <span>Channel: {report.auth.channelId} || Offender: {report.auth.userId}</span><br/>
+                <span>ClientId: {report.auth.clientId}</span><br/>
+                <span>Token: {JSON.stringify(jose.decodeJwt(report.auth.token), null, 2)}</span><br/>
+            </li>
+            )}
+        </ul>
+    </div>)}
+    
     </div>);
 }
 

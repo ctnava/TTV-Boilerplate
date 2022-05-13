@@ -53,7 +53,7 @@ async function del(route, rawData, auth, opts) {
 
     var options = {data, headers};
     if (opts) addOptions(options, opts);
-    const res = await axios.del(url, options);
+    const res = await axios.delete(url, options);
     return res;
 }
 

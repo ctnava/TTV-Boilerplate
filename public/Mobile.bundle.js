@@ -255,7 +255,7 @@ function _del() {
             };
             if (opts) addOptions(options, opts);
             _context5.next = 5;
-            return axios_default().del(url, options);
+            return axios_default()["delete"](url, options);
 
           case 5:
             res = _context5.sent;
@@ -410,6 +410,7 @@ var Config_diag_default = /*#__PURE__*/__webpack_require__.n(Config_diag);
 
 
 
+
 function RequestPanel(props) {
   var _useState = (0,react.useState)(""),
       _useState2 = (0,slicedToArray/* default */.Z)(_useState, 2),
@@ -430,15 +431,15 @@ function RequestPanel(props) {
 
   function del(event) {
     event.preventDefault();
-    api.req.del("bad_actor", {
-      auth: {
-        password: password
-      }
-    }, {
-      password: password
-    }).then(function () {
-      api.req.get("bad_actor", {}, props.auth).then(function (res) {
-        if (!res.data) setReports(res);
+    var auth = {
+      token: password
+    };
+    var data = {
+      auth: auth
+    };
+    api.req.del("bad_actor", data, auth).then(function () {
+      api.req.get("bad_actor", props.auth).then(function (res) {
+        if (res.data) setReports(res.data);
         setPassword("");
       });
     });
@@ -446,20 +447,22 @@ function RequestPanel(props) {
 
   function get(event) {
     event.preventDefault();
-    api.req.get("bad_actor", {}, props.auth).then(function (res) {
-      if (!res.data) setReports(res);
+    api.req.get("bad_actor", props.auth).then(function (res) {
+      if (res.data) setReports(res.data);
     });
   }
 
-  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("button", {
-    onClick: get
-  }, "Get Reports"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("form", null, /*#__PURE__*/react.createElement("input", {
+  return /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("form", null, /*#__PURE__*/react.createElement("input", {
     onChange: handleChange,
     value: password,
     placeholder: "password"
   }), /*#__PURE__*/react.createElement("button", {
     onClick: del
-  }, "Delete Reports")), /*#__PURE__*/react.createElement("p", null, reports));
+  }, "Delete Reports")), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("button", {
+    onClick: get
+  }, "Get Reports"), reports.archive.length > 0 && /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "Reports"), /*#__PURE__*/react.createElement("ul", null, reports.archive.map(function (report) {
+    return /*#__PURE__*/react.createElement("li", null, /*#__PURE__*/react.createElement("span", null, new Date(report.timestamp * 1000).toString(), " || ", report.reportType), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement("span", null, "Channel: ", report.auth.channelId, " || Offender: ", report.auth.userId), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement("span", null, "ClientId: ", report.auth.clientId), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement("span", null, "Token: ", JSON.stringify(browser/* decodeJwt */.t5(report.auth.token), null, 2)), /*#__PURE__*/react.createElement("br", null));
+  }))));
 }
 
 /* harmony default export */ var Config_RequestPanel = (RequestPanel);
@@ -489,7 +492,7 @@ function Config(props) {
     className: "Ext ".concat(props.themeClass)
   }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? ttvOauth.hasRole.moderator(props.auth) ? /*#__PURE__*/react.createElement(Config_RequestPanel, {
     auth: props.auth
-  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("p", null, "Configuration Not Required"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement(util_OAuth, {
+  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("p", null, "Configuration Not Required"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement(Config_RequestPanel, {
     auth: props.auth
   })) : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
@@ -1070,7 +1073,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "5f1a64792052938a39d5"; }
+/******/ 		__webpack_require__.h = function() { return "19b5121345fe6936fce2"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

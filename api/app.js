@@ -24,7 +24,7 @@ app.get('/', (req, res)=>{res.json("Hello, welcome to my back end! Now git out."
 
 
 const falsy = ["",{},0,false,null,undefined];
-const invalidData=(data)=>{return(falsy.includes(data)||falsy.includes(data.auth)||falsy.includes(data.auth.token)||falsy.includes(data.timestamp))}
+const invalidData=(body)=>{return(falsy.includes(body)||falsy.includes(body.auth)||falsy.includes(body.auth.token)||falsy.includes(body.timestamp))}
 const invalidHeader=(headers, auth)=>{return (falsy.includes(headers.authorization)||headers.authorization!==`Bearer ${auth.token}`)}
 const syntheticAuth = {token:process.env.BACKEND_SECRET};
 const defaultArchive = {archive:[]};
@@ -47,31 +47,30 @@ app.route('/bad_actor')
 .get((req, res) => {
     if (fs.existsSync(pathToReports)) {
         const reports = JSON.parse(fs.readFileSync(pathToReports));
-
-        console.log(req.data);
         res.json(reports);
     } else res.json(defaultArchive);
 })
 .put((req, res) => {
-    const { data, headers } = req;
-    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
-    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
+    const { body, headers } = req;
+    if (invalidData(body)){console.log('INVALID_BODY');res.json('INVALID_BODY');return}
+    if (invalidHeader(headers, body.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
     
-    console.log(req.data);
+    console.log(req.body);
     res.json('ok');
 })
 .patch((req, res) => {
-    const { data, headers } = req;
-    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
-    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
+    const { body, headers } = req;
+    if (invalidData(body)){console.log('INVALID_BODY');res.json('INVALID_BODY');return}
+    if (invalidHeader(headers, body.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
 
-    console.log(req.data);
+    console.log(req.body);
     res.json('ok');
 })
 .delete((req, res) => {
-    const { data, headers } = req;
-    if (invalidData(data)){console.log('INVALID_DATA');res.json('INVALID_DATA');return}
-    if (invalidHeader(headers, data.auth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
+    const { body, headers } = req;
+    console.log(req.body)
+    if (invalidData(body)){console.log('INVALID_BODY');res.json('INVALID_BODY');return}
+    if (invalidHeader(headers, syntheticAuth)){console.log('INVALID_HEADERS');res.json("INVALID_HEADERS");return}
     
     fs.unlinkSync(pathToReports);
     res.json('ok');
