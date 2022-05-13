@@ -1,5 +1,5 @@
 # Unofficial React + Express Boilerplate for TTV Extensions
-[Buy Me a Coffee] (https://www.buymeacoffee.com/CAT6)
+[Buy Me a Coffee](https://www.buymeacoffee.com/CAT6)
 ## About
 
 I made this primarily out of frustration with how outdated the official boilerplates are. It's meant to produce every type of extension by default. If you look at the source, I treat everything the same except for Config pages. To start developing your extension, install dependencies and edit "./src/components/App/App.jsx" or "./src/components/Config/Config.jsx".
