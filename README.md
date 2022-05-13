@@ -49,7 +49,7 @@ https://localhost:8080/
 "usingRandomFrontendHostingPort": false
 ```
 
-## Screenshots
+## Screenshots for Every Extension Type
 ![Screenshot1](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/1.PNG)
 ![Screenshot2](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/2.PNG)
 ![Screenshot3](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/3.PNG)
