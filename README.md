@@ -7,6 +7,8 @@ I made this primarily out of frustration with how outdated the official boilerpl
 When you are ready to use this with Twitch's DevRig, run ```yarn host```.
 For local testing, use ```yarn start```.
 To pack up for deployment, use ```yarn build``` to populate "./dist".
+If you want to update the public folder without accidentally deleting your work, use ```yarn publish```
+To launch the backend, use ```yarn api```.
 
 Tests are coming soon.
 
