@@ -1,4 +1,4 @@
-# React Boilerplate for TTV Extensions
+# React + Express Boilerplate for TTV Extensions
 
 ## About
 
