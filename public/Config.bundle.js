@@ -492,7 +492,7 @@ function Config(props) {
     className: "Ext ".concat(props.themeClass)
   }, /*#__PURE__*/react.createElement("h1", null, "Config - ", props.type), /*#__PURE__*/react.createElement("h3", null, "ctnava/TTV-Boilerplate@github"), /*#__PURE__*/react.createElement("hr", null), !props.loading ? props.type === "Live" ? ttvOauth.hasRole.moderator(props.auth) ? /*#__PURE__*/react.createElement(Config_RequestPanel, {
     auth: props.auth
-  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("p", null, "Configuration Not Required"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement(Config_RequestPanel, {
+  }) : /*#__PURE__*/react.createElement("p", null, "User not Moderator") : /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("p", null, "Configuration Not Required"), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement(util_OAuth, {
     auth: props.auth
   })) : /*#__PURE__*/react.createElement("p", null, "Loading..."));
 }
@@ -1073,7 +1073,7 @@ if (true) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "19b5121345fe6936fce2"; }
+/******/ 		__webpack_require__.h = function() { return "a9a161ae3450bdded00f"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

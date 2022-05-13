@@ -24,7 +24,7 @@ function Config(props) { diag(props.twitch, props.type, props.loading, props.aut
 
             ) : (<div>
                 <p>Configuration Not Required</p><hr/>
-                <RequestPanel auth={props.auth} />
+                <OAuth auth={props.auth} />
             </div>)
 
         ) : (<p>Loading...</p>) }
