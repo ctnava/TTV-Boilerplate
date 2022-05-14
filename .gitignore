@@ -1,4 +1,5 @@
 # general
+/*.pem
 /*.env
 /.DS_Store
 /*.code-workspace
@@ -18,7 +19,6 @@
 
 # build
 /build 
-/dist
 
 
 # api

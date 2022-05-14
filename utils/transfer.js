@@ -2,10 +2,13 @@ const fs = require("fs");
 
 
 (()=>{
-    if (fs.existsSync("./public")) fs.rmSync("./public", {recursive:true})
-    fs.mkdirSync("./public");
-    const files = fs.readdirSync("./dist");
+    const projectConfig = JSON.parse(fs.readFileSync("./Project.json"));
+    const pathToFolder = `./${projectConfig.frontendFolderName}`;
+
+    if (fs.existsSync(pathToFolder)) fs.rmSync(pathToFolder, {recursive:true})
+    fs.mkdirSync(pathToFolder);
+    const files = fs.readdirSync("./build");
     files.forEach(file => {
-        fs.writeFileSync(`./public/${file}`, fs.readFileSync(`./dist/${file}`));
+        fs.writeFileSync(`${pathToFolder}/${file}`, fs.readFileSync(`./build/${file}`));
     });
 })();

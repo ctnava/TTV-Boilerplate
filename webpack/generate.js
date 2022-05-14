@@ -9,7 +9,7 @@ function inputs(mode) {
     var entry = {};
     var plugins = [
         new Dotenv(),
-        new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['dist']}),
+        new CleanWebpackPlugin({cleanAfterEveryBuildPatterns: ['build']}),
         new webpack.HotModuleReplacementPlugin()
     ];
     
@@ -36,7 +36,7 @@ function inputs(mode) {
 const outputs = (dir) => {
     return{ 
         filename: "[name].bundle.js",
-        path: `${dir}/dist`
+        path: `${dir}/build`
     }
 };
 

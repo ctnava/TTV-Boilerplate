@@ -23,20 +23,20 @@ module.exports = (env, argv) => {
     optimization
   }
   
-  if (argv.mode === "production") {
-    config.optimization.splitChunks = {
-      name: false,
-      cacheGroups: {
-        default:false,
-        vendors:false,
-        vendor: {
-          chunks:'all',
-          test:/node_modules/,
-          name:false
-        }
-      }
-    }
-  } else {config.devServer = server(__dirname, devrig)}
-
+  // if (argv.mode === "production") {
+  //   config.optimization.splitChunks = {
+  //     name: false,
+  //     cacheGroups: {
+  //       default:false,
+  //       vendors:false,
+  //       vendor: {
+  //         chunks:'all',
+  //         test:/[\\/]node_modules[\\/]/,
+  //         name:false
+  //       }
+  //     }
+  //   }
+  // }
+  if (mode === "development") {config.devServer = server(__dirname, devrig)}
   return config;
 };
