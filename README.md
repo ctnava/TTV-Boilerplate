@@ -4,14 +4,7 @@
 
 I made this primarily out of frustration with how outdated the official boilerplates are. It's meant to produce every type of extension by default. If you look at the source, I treat everything the same except for Config pages. To start developing your extension, install dependencies and edit "./src/components/App/App.jsx" or "./src/components/Config/Config.jsx".
 
-When you are ready to use this with Twitch's DevRig, run ```yarn host```.
-For local testing, use ```yarn start```.
-To pack up for deployment, use ```yarn build``` to populate "./dist".
-If you want to update the public folder without accidentally deleting your work, use ```yarn xfer```
-To launch the backend, use ```yarn api```.
-
 Tests are coming soon.
-
 
 ## Developer Console Settings (Extension Management)
 
