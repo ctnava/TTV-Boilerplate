@@ -4,7 +4,29 @@
 
 I made this primarily out of frustration with how outdated the official boilerplates are. It's meant to produce every type of extension by default. If you look at the source, I treat everything the same except for Config pages. To start developing your extension, install dependencies and edit "./src/components/App/App.jsx" or "./src/components/Config/Config.jsx".
 
-Tests are coming soon.
+#### Planned
+- Tests with Jest
+- Example code for feature integration
+- Twitch Utils consolidation
+- General API Utils improvements
+- More FAQs in the readme
+- Heroku Deployment Bash Scripts
+- Build Export Automation (Auto-Zip for Hosted Testing)
+
+#### Changelog
+- Live Update Support
+- Webpack Post-Build Automation
+- Static Asset Support
+- Improved Bundling (Config/App Separation)
+- Limited Environment Setup Automation
+- Enhanced API Security
+- Basic CCPA & GDPR Compliance 
+- Legal Endpoints
+- Consolidated API Utils
+- Reduced prop drilling
+- Wider array of ttv utils
+- General webpack improvements
+- A Much More Detailed Readme
 
 ## Developer Console Settings (Extension Management)
 
