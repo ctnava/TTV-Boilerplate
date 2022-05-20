@@ -1,5 +1,5 @@
 import React from 'react';
-import oauth from './ttvOauth';
+import oauth from '../../util/twitch/oauth';
 
 
 function OAuth(props) {

@@ -1,0 +1,17 @@
+{
+  "certificateExceptions": [],
+  "extensionViews": [],
+  "manifest": {
+    "id": "",
+    "version": "0.0.1",
+    "viewerUrls": {},
+    "views": {},
+    "liveConfigUrl": "https://localhost:8080/live_config.html"
+  },
+  "allowHttpBackend": true,
+  "usingRandomFrontendHostingPort": false,
+  "frontendFolderName": "build",
+  "frontendCommand": "yarn host",
+  "backendFolderName": "temp",
+  "backendCommand": "node api/app.js"
+}

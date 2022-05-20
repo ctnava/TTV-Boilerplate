@@ -5,12 +5,10 @@
   "scripts": {
     "test": "jest",
     "api": "nodemon api/app",
-    "xfer": "node utils/transfer.js",
-    "build": "webpack --mode=production",
-    "start": "webpack-dev-server --mode=development",
-    "host": "webpack-dev-server --mode=development --env devrig",
-    "watch": "webpack --watch",
-    "serve": "webpack serve --mode"
+    "build": "npx webpack --mode=production",
+    "start": "npx webpack-dev-server --mode=development",
+    "host": "npx webpack-dev-server --mode=development --env devrig",
+    "quickStart": "node util/quickStart.js"
   },
   "author": "ctnava.github.io",
   "license": "MIT",
@@ -26,12 +24,13 @@
     "@webpack-cli/generators": "^2.4.2",
     "babel-loader": "^8.2.5",
     "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
+    "eslint": "^8.15.0",
     "file-loader": "^6.2.0",
     "html-loader": "^3.1.0",
     "html-webpack-plugin": "^5.5.0",
     "jest": "^28.1.0",
-    "mini-css-extract-plugin": "^2.6.0",
     "nodemon": "^2.0.16",
     "sinon": "^14.0.0",
     "style-loader": "^3.3.1",
@@ -53,6 +52,11 @@
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "prettier": {
+    "eslintIntegration": true,
+    "tabWidth": 4,
+    "useTabs": true
   },
   "babel": {
     "presets": [
