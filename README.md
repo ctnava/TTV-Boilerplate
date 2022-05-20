@@ -95,7 +95,14 @@ Notes:
 - Choosing to use a custom user ID is generally only to test features in the aforementioned feature flags. Unless you plan to support bits or subs, you don't need to do this.
 
 
-### Step 6: Actual Development
+### Step 6: Getting It to Run
+
+As a sanity check run ```yarn api``` in any terminal window and then click "Run Front End" in the developer rig. All viewer-facing windows should display their respective credentials and, if they are a mod, they should see a non-functional "Mod Button". All configuration windows (mod-facing) should allow the user to see any and all information that the REST API has collected on them. 
+
+Whether you are a streamer or not, the CCPA/GDPR mandates that consumers be able to access, download, and delete their data; invoking the right to be forgotten so that your extension is allowed to lawfully operate in California and the EU. Visiting the REST API directly at "/" should result in a JSON response of "Hello World!" or similar while the "/legal" endpoint should result in the display of a blank Terms & Conditions/ Privacy Policy contract. Because I am not a lawyer, it is up to you to COVER YOUR ASS. I highly recommend that you include legal wording that covers these laws specifically and invoke Twitch TV's own legally binding contracts where applicable because they have spent BANK on lawyers.
+
+
+### Step 7: Actual Development
 
 Firstly, pat yourself on the back. Most people give up before they get here. Secondly, remember that this is why you downloaded this boilerplate.
 
@@ -121,8 +128,7 @@ TTV-specific utilities can be found in ```./src/components/util/twitch```. While
 In ```./api/app.js```, you can add custom endpoints below line 10 to serve your extension with preloaded utilities for json interaction, request validation, and easy pathfinding. Do check them out in ```./api/utils/utils.js```!
 
 
-
-### Step 7: Preparing for the Hosted Test
+### Step 8: Preparing for the Hosted Test
 
 ```yarn build```
 This command will bundle your extension so that it may be zipped and uploaded to Twitch's CDN. Open the ```./build``` folder and send only the relevant files to a compressed zip. Once compressed, you will be able to the "Status" tab of your developer console, scroll to the bottom where the "Next Steps" Section is located, click "Go to Files", upload your file, navigate back to the "Status" tab, and click "Move to Hosted Test".
@@ -131,6 +137,8 @@ Notes:
 - Renamed .rar or .7z files will not work and, at the time of writing, result in a faulty error message.
 - Do NOT compress every file in the build folder. Only archive the files that are intended to be used.
 
+## Good Luck; Have Fun!
 
+DISCLAIMER: This boiler plate is far from complete and receive regular maintenance within reason. If you want a feature integrated, feel free to submit a PR! If you have any questions, you can contact me at CAT6#2699 on discord.
 
 [So you made it this far? Feel free to buy me a coffee if I made your first TTV extension a managable experience.](https://www.buymeacoffee.com/CAT6)
