@@ -63,7 +63,7 @@ Notes:
 
 After getting the File Explorer open, navigate to the boiler plate root and open "Project.json". In its current state, it will simply serve no other function than to grab your extension's metadata from your TTV Developer Console. Once successfully linked, click "Refresh Manifest" to fetch your current configuration and mesh it with my preset. The resulting "Project Details" page will look like this.
 
-![ConfigScreenshot](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/ProjectDetails.PNG)
+![ConfigScreenshot](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/development/blob/ProjectDetails.PNG)
 
 ### Step 3: Booting up the Backend Server
 
@@ -81,7 +81,7 @@ Click "Run Front End" on, either, the "Extension Views" or "Project Details" tab
 
 If the aforementioned steps are followed exactly, you will see the following log:
 
-![LogScreenshot](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/main/blob/Success.PNG)
+![LogScreenshot](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/development/blob/Success.PNG)
 
 The text in red is a non-fatal error caused by a missing certificate. This prompts webpack to self-certify your back end. In short, this is nothing to worry about. The true indicator of a successful front end start is when the log ends in the following line:
 ```
