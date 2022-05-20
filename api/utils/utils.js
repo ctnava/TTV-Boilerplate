@@ -6,7 +6,6 @@ const pathTo = {
 	logs: "./api/logs.json",
 	template: "./api/template.json",
 	reports: "./api/reports.json",
-	env: "./api/env.json",
 	legal: "./api/legal.json",
 };
 
