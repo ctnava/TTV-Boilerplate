@@ -99,6 +99,10 @@ Notes:
 
 As a sanity check run ```yarn api``` in any terminal window and then click "Run Front End" in the developer rig. All viewer-facing windows should display their respective credentials and, if they are a mod, they should see a non-functional "Mod Button". All configuration windows (mod-facing) should allow the user to see any and all information that the REST API has collected on them. 
 
+Here is a (quite ugly) example of what they should look like.
+![DevrigScreenshot](https://raw.githubusercontent.com/ctnava/TTV-Boilerplate/development/blob/Functional.PNG)
+
+
 Whether you are a streamer or not, the CCPA/GDPR mandates that consumers be able to access, download, and delete their data; invoking the right to be forgotten so that your extension is allowed to lawfully operate in California and the EU. Visiting the REST API directly at "/" should result in a JSON response of "Hello World!" or similar while the "/legal" endpoint should result in the display of a blank Terms & Conditions/ Privacy Policy contract. Because I am not a lawyer, it is up to you to COVER YOUR ASS. I highly recommend that you include legal wording that covers these laws specifically and invoke Twitch TV's own legally binding contracts where applicable because they have spent BANK on lawyers.
 
 
